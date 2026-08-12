@@ -191,6 +191,69 @@ for m in C["metrics"]:
                     "status": series[i]["status"], "vs_prior": vs
                 })
 
+# ---- Plain-language formula explanations (shown on the dashboard) ----
+FORMULA_EXPLANATIONS = {
+    "fin.revenue": "Sum of all revenue booked in the month, per brand.",
+    "fin.gross_margin": "Revenue minus cost of goods sold, divided by revenue. How much of each Rand survives after direct product costs.",
+    "fin.net_burn": "Cash out minus cash in for the month. Negative burn means the business is self-funding.",
+    "fin.runway": "Cash balance divided by monthly net burn. How many months the business can run before cash runs out.",
+    "fin.dso": "Accounts receivable divided by revenue, times days in the period. How long customers take to pay.",
+    "fin.opex_ratio": "Operating expenditure divided by revenue. How much of each Rand goes to running the business.",
+    "fin.recurring_ratio": "Recurring revenue divided by total revenue. How predictable the revenue base is.",
+    "fin.ltv_cac": "Lifetime value divided by customer acquisition cost. How many Rands each acquisition Rand returns.",
+    "fin.payback": "CAC divided by monthly gross margin per customer. Months to earn back the cost of acquiring a customer.",
+    "fin.revenue_vs_plan": "Month-to-date actual revenue divided by month-to-date budget. Ahead of or behind plan?",
+    "hr.headcount": "Count of active employees in FTE.",
+    "hr.rev_per_fte": "Trailing twelve-month revenue divided by FTE headcount. Revenue productivity per person.",
+    "hr.attrition": "Voluntary leavers over twelve months divided by average headcount. How many people choose to leave.",
+    "hr.new_hire_90d": "New hires still employed and meeting expectations at 90 days, divided by total hires.",
+    "hr.team_satisfaction": "Average employee satisfaction survey score, 1-10.",
+    "hr.training_hours": "Training hours divided by headcount. Hours of development per person per month.",
+    "hr.playbook_coverage": "Roles with a current documented playbook divided by total roles.",
+    "it.system_uptime": "Uptime minutes divided by total minutes in the period. Availability of production systems.",
+    "it.mttr_p1": "Average hours to resolve priority-one incidents.",
+    "it.open_tickets": "Count of support tickets still open.",
+    "it.automation_coverage": "Automated processes divided by total repeatable processes.",
+    "it.ai_adoption": "Team members actively using AI tools divided by headcount.",
+    "it.mfa_coverage": "Accounts with MFA enforced divided by total accounts.",
+    "it.tech_debt": "Manual 1-10 assessment of codebase health, where 10 is clean.",
+    "mkt.marketing_spend": "Sum of all marketing spend in the period, per product.",
+    "mkt.cost_per_lead": "Marketing spend divided by leads generated. What each lead costs.",
+    "mkt.marketing_roi": "Funnel output value divided by marketing spend. Rands returned per Rand spent.",
+    "mkt.brand_reach": "Total audience size across all owned channels.",
+    "mkt.help_first_content": "Count of free value pieces published with no gate and no catch.",
+    "mkt.community_size": "Total followers, members and engaged community across channels.",
+    "sal.pipeline": "Total value of open deals.",
+    "sal.pipeline_coverage": "Weighted open pipeline divided by next-period target. How much of the target is already in the pipeline.",
+    "sal.deals_won": "Count of deals closed-won in the period.",
+    "sal.win_rate": "Deals won divided by deals closed. How often we win what we close.",
+    "sal.avg_deal_size": "Won value divided by won count. Average value of a closed deal.",
+    "sal.nrr": "Opening revenue plus expansion minus churn and contraction, divided by opening revenue. Net revenue retention.",
+    "sal.churn": "Customers lost divided by total customers.",
+    "ops.output_units": "Sum of units or kilograms produced.",
+    "ops.quality_score": "Average product or service quality rating, 1-10.",
+    "ops.delivery_on_time": "Deliveries on time divided by total deliveries.",
+    "ops.csat": "Average customer satisfaction rating, 1-10.",
+    "ops.unit_margin": "Gross margin generated per operating unit or franchise site.",
+    "ops.sop_compliance": "Score achieved on the standard operating audit.",
+    "founder.buyback_rate": "Annual pre-tax income divided by annual hours worked, then divided by 4. The Rand-per-hour threshold below which a task should be delegated.",
+    "founder.production_pct": "High-value hours divided by total hours worked. Share of time in the Production quadrant.",
+    "founder.delegation_ratio": "Tasks delegated divided by tasks owned.",
+    "founder.escalations": "Count of decisions in the week that could not be closed without Ricardo.",
+    "founder.eliminated_tasks": "Count of low-value tasks removed from workflows entirely.",
+    "founder.ladder_position": "Highest filled rung of the Replacement Ladder, scored 0-5.",
+    "impact.people_helped": "Sum of people positively impacted — customers, franchisees, employees, community.",
+    "impact.purpose_score": "Manual 1-10 assessment of mission clarity — can the team state the Dream unprompted?",
+    "impact.jobs_sustained": "FTE headcount plus franchise-level employment supported by the group.",
+    "funnel.leads": "Count of new leads generated in the month, per product.",
+    "funnel.conv_lead_to_opp": "Qualified opportunities divided by leads. The SDR team's conversion rate.",
+    "funnel.opportunities": "Count of leads qualified into opportunities.",
+    "funnel.cost_per_opportunity": "Marketing spend divided by qualified opportunities produced.",
+    "funnel.conv_opp_to_close": "Closed business divided by opportunities. The Dealmaker team's conversion rate.",
+    "funnel.output_zar": "Sum of closed business value. Professional services only.",
+    "funnel.output_locations": "Count of franchise locations sold. FND only — never expressed in Rand at funnel level.",
+}
+
 # ---- Emit data.js ----
 def js_str(s):
     return json.dumps(str(s))
@@ -207,6 +270,7 @@ out.append("const GSD_DEPTS = " + json.dumps(depts, indent=2) + ";")
 out.append("const GSD_MONTHS = " + json.dumps(MONTHS) + ";")
 out.append("const GSD_CURRENT = " + js_str(CURRENT) + ";")
 out.append("const GSD_READINGS = " + json.dumps(readings) + ";")
+out.append("const GSD_FORMULA_EXPLANATIONS = " + json.dumps(FORMULA_EXPLANATIONS, indent=2) + ";")
 out.append("const GSD_SIMULATED = true;")
 
 os.makedirs(os.path.dirname(OUT), exist_ok=True)

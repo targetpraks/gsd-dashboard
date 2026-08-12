@@ -266,6 +266,20 @@
     border-radius: 20px; font-size: 10px; font-weight: 700; padding: 1px 6px; margin-left: 6px;
   }
   .count-badge.zero { background: rgba(46,204,113,0.15); color: var(--green); }
+
+  /* Formula explanations */
+  .formula {
+    margin-top: 6px; padding: 8px 10px;
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid rgba(0, 212, 255, 0.12);
+    border-radius: 8px;
+    font-size: 11px; line-height: 1.5;
+  }
+  .f-plain { color: var(--muted); }
+  .f-code {
+    margin-top: 4px; font-family: var(--mono); font-size: 10px;
+    color: var(--accent2); word-break: break-word;
+  }
 </style>
 </head>
 <body>
@@ -421,6 +435,18 @@ const brandById = (id) => GSD_BRANDS[id];
 const productById = (id) => GSD_PRODUCTS.find(p => p.id === id);
 const deptById = (id) => GSD_DEPTS[id];
 
+/* Formula explanation: plain-language + the contract formula, shown under every metric */
+function formulaHtml(m) {
+  const plain = GSD_FORMULA_EXPLANATIONS[m.id] || m.definition || '';
+  const f = m.formula || '';
+  if (!plain && !f) return '';
+  return `
+    <div class="formula">
+      <div class="f-plain">${plain}</div>
+      ${f ? `<div class="f-code">${f}</div>` : ''}
+    </div>`;
+}
+
 function readingsFor(metricId, brandId, productId, period) {
   return GSD_READINGS.filter(r =>
     r.metric_id === metricId &&
@@ -486,6 +512,7 @@ function renderCeo() {
           </div>
           <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(st)};"></div></div>
           <div class="sub" style="font-size:10px; color:var(--muted);">${m.id} · ${deptById(m.department) ? deptById(m.department).name : m.department} · ${m.cadence}</div>
+          ${formulaHtml(m)}
         </div>`;
     }).join('');
     return `
@@ -570,6 +597,7 @@ function renderBrandBoard() {
             </span>
           </div>
           <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(r.status)};"></div></div>
+          ${formulaHtml(m)}
         </div>`;
     }).join('');
     return `<div class="card"><h3>${d ? d.name : deptId}</h3>${rows}</div>`;
@@ -615,6 +643,7 @@ function renderFunnel() {
               <span><span class="value">${fmt(r ? r.value : null, outM.unit)}</span> ${pill(r ? r.status : 'no_data')}</span>
             </div>
             <div class="sub">${s.accountable_for}</div>
+            ${formulaHtml(outM)}
           </div>
           ${convM && convR ? `
           <div class="metric">
@@ -623,6 +652,7 @@ function renderFunnel() {
               <span><span class="value">${fmt(convR.value, convM.unit)}</span> ${pill(convR.status)}</span>
             </div>
             <div class="sub">${convM.definition}</div>
+            ${formulaHtml(convM)}
           </div>` : ''}
         </div>
       </div>`;
@@ -685,7 +715,8 @@ function renderDept() {
       if (!r) return `<td class="mono" style="color:var(--muted);">—</td>`;
       return `<td class="mono">${fmt(r.value, m.unit)} ${pill(r.status)}</td>`;
     }).join('');
-    return `<tr><td style="font-weight:600;">${m.name}</td><td class="mono" style="color:var(--muted);">${m.id}</td>${cells}</tr>`;
+    const plain = GSD_FORMULA_EXPLANATIONS[m.id] || m.definition || '';
+    return `<tr><td style="font-weight:600;">${m.name}</td><td class="mono" style="color:var(--muted);">${m.id}</td><td style="color:var(--muted); font-size:12px; max-width:260px;">${plain}</td>${cells}</tr>`;
   }).join('');
   const headers = Object.values(GSD_BRANDS).map(b => `<th>${b.name}</th>`).join('');
   $('#dept-view').innerHTML = `
@@ -693,7 +724,7 @@ function renderDept() {
       <h3>${d.name} — North Star: ${d.north_star}</h3>
       <div style="overflow-x:auto;">
         <table class="table">
-          <thead><tr><th>Metric</th><th>ID</th>${headers}</tr></thead>
+          <thead><tr><th>Metric</th><th>ID</th><th>How it's calculated</th>${headers}</tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
@@ -710,6 +741,7 @@ function renderLibrary() {
   });
   const rows = list.map(m => {
     const d = deptById(m.department);
+    const plain = GSD_FORMULA_EXPLANATIONS[m.id] || m.definition || '';
     return `
       <tr>
         <td class="mono" style="color:var(--accent2);">${m.id}</td>
@@ -722,12 +754,13 @@ function renderLibrary() {
         <td>${m.owner}</td>
         <td>${m.framework_pillar ? (m.framework_pillar === 'martell' ? 'Martell' : 'Squibb') : '—'}</td>
         <td>${m.impact_metric ? '<span class="pill green">IMPACT</span>' : '—'}</td>
+        <td style="color:var(--muted); font-size:12px; max-width:280px;">${plain}</td>
       </tr>`;
   }).join('');
   $('#library-table').innerHTML = `
     <div style="overflow-x:auto;">
       <table class="table">
-        <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Type</th><th>Unit</th><th>Cadence</th><th>Source</th><th>Owner</th><th>Pillar</th><th>Impact</th></tr></thead>
+        <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Type</th><th>Unit</th><th>Cadence</th><th>Source</th><th>Owner</th><th>Pillar</th><th>Impact</th><th>How it's calculated</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
