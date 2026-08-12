@@ -180,7 +180,30 @@ metrics["fin.ebitda_dept"] = {
 }
 brands = {b["id"]: b for b in C["taxonomy"]["brands"]}
 products = C["taxonomy"]["products"]["items"]
-depts = {d["id"]: d for d in C["taxonomy"]["departments"]}
+
+# ---- Business Unit structure (Ricardo's codes) ----
+BU_STRUCTURE = [
+    {"id": "fin", "code": "BU 1", "name": "FIN", "full": "BU 1 FIN", "north_star": "fin.runway"},
+    {"id": "hr", "code": "BU 2", "name": "HRM", "full": "BU 2 HRM", "north_star": "hr.rev_per_fte"},
+    {"id": "adm", "code": "BU 3", "name": "ADM", "full": "BU 3 ADM", "north_star": "impact.purpose_score"},
+    {"id": "it", "code": "BU 4", "name": "ITC", "full": "BU 4 ITC", "north_star": "it.system_uptime"},
+    {"id": "mkt", "code": "BU 5", "name": "MKT", "full": "BU 5 MKT", "north_star": "mkt.cost_per_lead"},
+    {"id": "sal", "code": "BU 6", "name": "SAL", "full": "BU 6 SAL", "north_star": "sal.pipeline_coverage"},
+    {"id": "ops1", "code": "BU 7", "name": "ZOR BO 1", "full": "BU 7 ZOR BO 1 (ACDC Express + Future Client)", "north_star": "ops.quality_score", "brands": ["acdc"]},
+    {"id": "ops2", "code": "BU 8", "name": "ZOR BO 2", "full": "BU 8 ZOR BO 2 (The Local Farmer + Papa Pasta)", "north_star": "ops.quality_score", "brands": ["tlf", "papapasta"]},
+]
+depts = {d["id"]: d for d in BU_STRUCTURE}
+
+# Map metric department → BU id
+BU_MAP = {
+    "fin": "fin",
+    "hr": "hr",
+    "impact": "adm",
+    "it": "it",
+    "mkt": "mkt",
+    "sal": "sal",
+    "ops": "ops1",  # default; UI picks ops2 for TLF/Papa Pasta
+}
 
 # ---- Generate readings ----
 readings = []  # {metric_id, brand_id|product_id, period, value, target, status, vs_prior}

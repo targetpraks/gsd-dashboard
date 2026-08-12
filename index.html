@@ -378,7 +378,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260812-3"></script>
+<script src="js/data.js?v=20260812-4"></script>
 <script>
 'use strict';
 
@@ -486,7 +486,7 @@ $('#period-next').addEventListener('click', () => {
 function renderCeoTabs() {
   const html = Object.values(GSD_BRANDS).map(b => `
     <button class="brand-tab ${state.ceoBrand === b.id ? 'active' : ''}" data-ceo-brand="${b.id}">
-      ${b.name} <span class="prio">P${b.priority}</span>
+      ${b.name}
     </button>`).join('');
   $('#ceo-brand-tabs').innerHTML = html;
   $$('#ceo-brand-tabs .brand-tab').forEach(t => t.addEventListener('click', () => {
@@ -537,7 +537,7 @@ function renderCeo() {
         <h3 style="margin:0; color:var(--text);">${b.name} — CEO Twelve</h3>
         <span class="pill ${b.status === 'active' ? 'green' : 'amber'}">${b.status.toUpperCase()}</span>
       </div>
-      <div style="margin-top:6px; font-size:12px; color:var(--muted);">${b.role} · Priority ${b.priority}</div>
+      <div style="margin-top:6px; font-size:12px; color:var(--muted);">${b.role}</div>
     </div>
     <div class="grid g-3">${html}</div>`;
 }
@@ -546,7 +546,7 @@ function renderCeo() {
 function renderBrandTabs() {
   const html = Object.values(GSD_BRANDS).map(b => `
     <button class="brand-tab ${state.brand === b.id ? 'active' : ''}" data-brand="${b.id}">
-      ${b.name} <span class="prio">P${b.priority}</span>
+      ${b.name}
     </button>`).join('');
   $('#brand-tabs').innerHTML = html;
   $$('#brand-tabs .brand-tab').forEach(t => t.addEventListener('click', () => {
@@ -573,15 +573,21 @@ function renderBrandBoard() {
       <div class="k-sub">${pill(r.status)} ${r.target !== null && r.target !== undefined ? '· target ' + fmt(r.target, m.unit) : ''}</div>
     </div>`).join('');
 
-  // Department cards — group all metrics for this brand by department
+  // Department cards — group all metrics for this brand by BU
+  const BU_MAP = { fin: 'fin', hr: 'hr', impact: 'adm', it: 'it', mkt: 'mkt', sal: 'sal', ops: 'ops1' };
   const deptGroups = {};
   Object.values(GSD_METRICS).forEach(m => {
     if (m.id.startsWith('funnel.')) return;
     if (m.department === 'founder') return;
     const r = latestReading(m.id, b.id);
     if (!r) return;
-    if (!deptGroups[m.department]) deptGroups[m.department] = [];
-    deptGroups[m.department].push({ m, r });
+    // ops splits by brand: ACDC → BU 7 ZOR BO 1; TLF + Papa Pasta → BU 8 ZOR BO 2
+    let buId = BU_MAP[m.department] || m.department;
+    if (m.department === 'ops') {
+      buId = (b.id === 'acdc') ? 'ops1' : 'ops2';
+    }
+    if (!deptGroups[buId]) deptGroups[buId] = [];
+    deptGroups[buId].push({ m, r });
   });
 
   // Finance: combine Revenue + Gross Margin into one row, add EBITDA
@@ -642,7 +648,7 @@ function renderBrandBoard() {
           <div class="sub" style="font-size:11px; color:var(--text); font-weight:600; margin-top:2px;">${(typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || ''}</div>
         </div>`;
     }).join('');
-    return `<div class="card"><h3>${d ? d.name : deptId}</h3>${rows}</div>`;
+    return `<div class="card"><h3>${d ? (d.code + ' ' + d.name) : deptId}</h3>${rows}</div>`;
   }).join('');
 
   $('#brand-board').innerHTML = `
@@ -734,9 +740,9 @@ function renderFunnel() {
 
 /* ================= Departments ================= */
 function renderDeptTabs() {
-  const html = Object.values(GSD_DEPTS).filter(d => d.id !== 'founder').map(d => `
+  const html = Object.values(GSD_DEPTS).map(d => `
     <button class="brand-tab ${state.dept === d.id ? 'active' : ''}" data-dept="${d.id}">
-      ${d.name}
+      ${d.code} ${d.name}
     </button>`).join('');
   $('#dept-tabs').innerHTML = html;
   $$('#dept-tabs .brand-tab').forEach(t => t.addEventListener('click', () => {
@@ -748,7 +754,13 @@ function renderDeptTabs() {
 
 function renderDept() {
   const d = deptById(state.dept);
-  const metrics = Object.values(GSD_METRICS).filter(m => m.department === state.dept && !m.id.startsWith('funnel.'));
+  // Map metric department → BU id (ops splits by brand: ops1 for ACDC, ops2 for TLF/Papa Pasta)
+  const BU_MAP = { fin: 'fin', hr: 'hr', impact: 'adm', it: 'it', mkt: 'mkt', sal: 'sal', ops: 'ops1' };
+  const metrics = Object.values(GSD_METRICS).filter(m => {
+    if (m.id.startsWith('funnel.')) return false;
+    if (m.department === 'founder') return false;
+    return (BU_MAP[m.department] || m.department) === state.dept;
+  });
   const rows = metrics.map(m => {
     const cells = Object.values(GSD_BRANDS).map(b => {
       const r = latestReading(m.id, b.id);
@@ -770,7 +782,7 @@ function renderDept() {
 
   $('#dept-view').innerHTML = `
     <div class="card" style="margin-bottom:14px;">
-      <h3>${d.name} — North Star: ${d.north_star}</h3>
+      <h3>${d.full || d.name} — North Star: ${d.north_star}</h3>
       <div style="overflow-x:auto;">
         <table class="table">
           <thead><tr><th>Metric</th><th>ID</th><th>What it means</th><th>Formula</th>${headers}</tr></thead>
@@ -783,7 +795,7 @@ function renderDept() {
       <div style="overflow-x:auto;">
         <table class="table">
           <thead><tr><th>Department</th>${headers}</tr></thead>
-          <tbody><tr><td style="font-weight:600;">${d.name}</td>${ebitdaRows}</tr></tbody>
+          <tbody><tr><td style="font-weight:600;">${d.full || d.name}</td>${ebitdaRows}</tr></tbody>
         </table>
       </div>
       <div class="sub" style="font-size:10px; color:var(--muted); margin-top:6px;">EBITDA = dept_revenue - dept_cogs - dept_opex</div>
