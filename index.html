@@ -378,7 +378,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260812-2"></script>
+<script src="js/data.js?v=20260812-3"></script>
 <script>
 'use strict';
 
@@ -431,7 +431,7 @@ const brandById = (id) => GSD_BRANDS[id];
 const productById = (id) => GSD_PRODUCTS.find(p => p.id === id);
 const deptById = (id) => GSD_DEPTS[id];
 
-/* Formula explanation: plain-language + the contract formula, shown under every metric */
+/* Simplified explanation: one short line + the contract formula, shown under every metric */
 function formulaHtml(m) {
   const plain = (typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || m.definition || '';
   const f = m.formula || '';
@@ -522,6 +522,7 @@ function renderCeo() {
           </div>
           <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(st)};"></div></div>
           <div class="sub" style="font-size:10px; color:var(--muted);">${m.id} · ${m.cadence}</div>
+          <div class="sub" style="font-size:11px; color:var(--text); font-weight:600; margin-top:2px;">${(typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || ''}</div>
         </div>`;
     }).join('');
     return `
@@ -623,6 +624,7 @@ function renderBrandBoard() {
           </div>
           <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(r.status)};"></div></div>
           <div class="sub" style="font-size:10px; color:var(--muted);">${m.formula}</div>
+          <div class="sub" style="font-size:11px; color:var(--text); font-weight:600; margin-top:2px;">Money earned and profit after product costs.</div>
         </div>`;
       }
       return `
@@ -637,6 +639,7 @@ function renderBrandBoard() {
           </div>
           <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(r.status)};"></div></div>
           <div class="sub" style="font-size:10px; color:var(--muted);">${m.formula || ''}</div>
+          <div class="sub" style="font-size:11px; color:var(--text); font-weight:600; margin-top:2px;">${(typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || ''}</div>
         </div>`;
     }).join('');
     return `<div class="card"><h3>${d ? d.name : deptId}</h3>${rows}</div>`;
@@ -753,7 +756,8 @@ function renderDept() {
       return `<td class="mono">${fmt(r.value, m.unit)} ${pill(r.status)}</td>`;
     }).join('');
     const f = m.formula || '';
-    return `<tr><td style="font-weight:600;">${m.name}</td><td class="mono" style="color:var(--muted);">${m.id}</td><td class="mono" style="color:var(--accent2); font-size:11px;">${f}</td>${cells}</tr>`;
+    const plain = (typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || '';
+    return `<tr><td style="font-weight:600;">${m.name}</td><td class="mono" style="color:var(--muted);">${m.id}</td><td style="font-size:12px; color:var(--text); font-weight:600;">${plain}</td><td class="mono" style="color:var(--accent2); font-size:11px;">${f}</td>${cells}</tr>`;
   }).join('');
   const headers = Object.values(GSD_BRANDS).map(b => `<th>${b.name}</th>`).join('');
 
@@ -769,7 +773,7 @@ function renderDept() {
       <h3>${d.name} — North Star: ${d.north_star}</h3>
       <div style="overflow-x:auto;">
         <table class="table">
-          <thead><tr><th>Metric</th><th>ID</th><th>Formula</th>${headers}</tr></thead>
+          <thead><tr><th>Metric</th><th>ID</th><th>What it means</th><th>Formula</th>${headers}</tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
@@ -798,6 +802,7 @@ function renderLibrary() {
   const rows = list.map(m => {
     const d = deptById(m.department);
     const f = m.formula || '';
+    const plain = (typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || '';
     return `
       <tr>
         <td class="mono" style="color:var(--accent2);">${m.id}</td>
@@ -810,13 +815,14 @@ function renderLibrary() {
         <td>${m.owner}</td>
         <td>${m.framework_pillar ? (m.framework_pillar === 'martell' ? 'Martell' : 'Squibb') : '—'}</td>
         <td>${m.impact_metric ? '<span class="pill green">IMPACT</span>' : '—'}</td>
+        <td style="font-size:12px; color:var(--text); font-weight:600;">${plain}</td>
         <td class="mono" style="color:var(--accent2); font-size:11px;">${f}</td>
       </tr>`;
   }).join('');
   $('#library-table').innerHTML = `
     <div style="overflow-x:auto;">
       <table class="table">
-        <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Type</th><th>Unit</th><th>Cadence</th><th>Source</th><th>Owner</th><th>Pillar</th><th>Impact</th><th>Formula</th></tr></thead>
+        <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Type</th><th>Unit</th><th>Cadence</th><th>Source</th><th>Owner</th><th>Pillar</th><th>Impact</th><th>What it means</th><th>Formula</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
