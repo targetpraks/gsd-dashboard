@@ -504,7 +504,9 @@ function renderCeoTabs() {
 
 function renderCeo() {
   const b = brandById(state.ceoBrand);
-  const blocks = CEREBRO.ceo_twelve.blocks;
+  const blocks = Object.fromEntries(
+    Object.entries(CEREBRO.ceo_twelve.blocks).filter(([name]) => name !== 'Founder Freedom')
+  );
   const html = Object.entries(blocks).map(([blockName, metricIds]) => {
     const rows = metricIds.map(mid => {
       const m = metricById(mid);
@@ -578,6 +580,7 @@ function renderBrandBoard() {
   const deptGroups = {};
   Object.values(GSD_METRICS).forEach(m => {
     if (m.id.startsWith('funnel.')) return;
+    if (m.department === 'founder') return;
     const r = latestReading(m.id, b.id);
     if (!r) return;
     if (!deptGroups[m.department]) deptGroups[m.department] = [];
@@ -732,7 +735,7 @@ function renderFunnel() {
 
 /* ================= Departments ================= */
 function renderDeptTabs() {
-  const html = Object.values(GSD_DEPTS).map(d => `
+  const html = Object.values(GSD_DEPTS).filter(d => d.id !== 'founder').map(d => `
     <button class="brand-tab ${state.dept === d.id ? 'active' : ''}" data-dept="${d.id}">
       ${d.name}
     </button>`).join('');
@@ -791,6 +794,7 @@ function renderDept() {
 function renderLibrary() {
   const q = ($('#metric-search').value || '').toLowerCase();
   const list = Object.values(GSD_METRICS).filter(m => {
+    if (m.department === 'founder') return false;
     if (!q) return true;
     const hay = [m.id, m.name, m.department, m.owner, m.source, m.definition, m.unit].join(' ').toLowerCase();
     return hay.includes(q);
@@ -831,6 +835,7 @@ function renderAlerts() {
   rules.forEach(rule => {
     const m = metricById(rule.metric);
     if (!m) return;
+    if (m.department === 'founder') return;
     // evaluate against all brands (or products for funnel metrics)
     if (m.id.startsWith('funnel.')) {
       GSD_PRODUCTS.forEach(p => {
@@ -895,13 +900,16 @@ function evalRule(rule, r) {
 function renderSystem() {
   // Framework
   const fw = CEREBRO.framework;
-  $('#framework-cards').innerHTML = fw.pillars.map(p => `
+  $('#framework-cards').innerHTML = fw.pillars.map(p => {
+    const keyMetrics = (p.key_metrics || []).filter(k => !k.startsWith('founder.'));
+    return `
     <div class="card framework-card">
       <h3>${p.name}</h3>
       <div class="principle">${p.principle}</div>
       <div class="levers">${(p.levers || p.pillars || []).map(l => `<span class="lever">${l}</span>`).join('')}</div>
-      <div style="margin-top:10px; font-size:11px; color:var(--muted);">Key metrics: ${(p.key_metrics || []).map(k => `<code style="font-family:var(--mono);">${k}</code>`).join(' · ')}</div>
-    </div>`).join('');
+      <div style="margin-top:10px; font-size:11px; color:var(--muted);">Key metrics: ${keyMetrics.map(k => `<code style="font-family:var(--mono);">${k}</code>`).join(' · ')}</div>
+    </div>`;
+  }).join('');
 
   // Data sources
   $('#data-sources').innerHTML = Object.entries(CEREBRO.data_sources).map(([k, v]) => `
