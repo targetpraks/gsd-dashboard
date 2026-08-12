@@ -525,8 +525,10 @@ function renderCeo() {
         </div>`;
     }).join('');
     return `
-      <div class="section-title"><span class="bar"></span> ${blockName}</div>
-      <div class="card" style="margin-bottom:14px;">${rows}</div>`;
+      <div class="card">
+        <h3>${blockName}</h3>
+        ${rows}
+      </div>`;
   }).join('');
   $('#ceo-blocks').innerHTML = `
     <div class="card" style="margin-bottom:14px; border-color:var(--border-strong);">
@@ -536,7 +538,7 @@ function renderCeo() {
       </div>
       <div style="margin-top:6px; font-size:12px; color:var(--muted);">${b.role} · Priority ${b.priority}</div>
     </div>
-    ${html}`;
+    <div class="grid g-3">${html}</div>`;
 }
 
 /* ================= Brand Boards ================= */
