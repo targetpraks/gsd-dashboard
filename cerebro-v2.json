@@ -1,0 +1,2382 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://infinitybrands.co.za/schemas/cerebro.json",
+  "title": "CEREBRO — Infinity Group Measurement System",
+  "version": "2.0.0",
+  "description": "Single canonical measurement contract for the Infinity Group. Merges the Cerebro layered spec (v1.0), the Hermes business-measurement-system schema (v1.0.0), and the existing Sales & Marketing Funnel Tracker model. This file supersedes both predecessors. Any AI, agent or system reading, writing or reporting on portfolio metrics reads this and nothing else.",
+  "supersedes": [
+    {
+      "source": "cerebro.json",
+      "version": "1.0.0",
+      "kept": "layer architecture, named owners, structured RAG thresholds, leading/lagging typing, operating cadence, 1-3-1 escalation, band targets, DDA governance note"
+    },
+    {
+      "source": "business-measurement-system.schema.json (Hermes)",
+      "version": "1.0.0",
+      "kept": "brand focus_metrics matrix, framework_pillar tagging, severity-based alerting, data_sources map, implementation phase tracking, metric-library-not-duplicated approach"
+    }
+  ],
+  "system": {
+    "owner": "Ricardo Da Costa Maio",
+    "status": "draft-for-ratification",
+    "created": "2026-08-12",
+    "timezone": "Africa/Johannesburg",
+    "currency": "ZAR",
+    "rag_standard": {
+      "green": ">= 100% of target",
+      "amber": "90-99% of target",
+      "red": "< 90% of target"
+    },
+    "structural_rules": [
+      "Every metric has exactly one named human owner. Never a department.",
+      "Metrics are defined ONCE in the library and referenced by brands. No duplication per brand.",
+      "Layer 1 is capped at 12. A thirteenth requires a deletion.",
+      "Targets are structured objects, never strings. Agents must be able to evaluate them without parsing English.",
+      "Impact metrics never excuse financial reds; financial greens never excuse impact reds.",
+      "Two consecutive reds trigger a playbook review, not a performance conversation."
+    ]
+  },
+  "framework": {
+    "name": "Martell x Squibb",
+    "pillars": [
+      {
+        "id": "martell",
+        "name": "Dan Martell — Buy Back Your Time",
+        "principle": "Time is the only non-renewable resource. Move hours into high-value work and systemise the rest.",
+        "levers": [
+          "eliminate",
+          "automate",
+          "delegate",
+          "consolidate"
+        ],
+        "key_metrics": [
+          "founder.buyback_rate",
+          "founder.production_pct",
+          "founder.escalations"
+        ]
+      },
+      {
+        "id": "squibb",
+        "name": "Simon Squibb — Help First / Give Without Take",
+        "principle": "Help people first, money follows. Commercial success is a byproduct of value genuinely delivered.",
+        "pillars": [
+          "purpose",
+          "impact",
+          "community"
+        ],
+        "key_metrics": [
+          "impact.people_helped",
+          "mkt.help_first_content",
+          "impact.purpose_score"
+        ]
+      }
+    ]
+  },
+  "taxonomy": {
+    "brands": [
+      {
+        "id": "infinity",
+        "name": "Infinity Brands",
+        "role": "HQ / Holding",
+        "status": "active",
+        "priority": 2,
+        "focus_metrics": [
+          "founder.buyback_rate",
+          "founder.delegation_ratio",
+          "founder.escalations",
+          "fin.net_burn",
+          "hr.rev_per_fte",
+          "impact.jobs_sustained"
+        ]
+      },
+      {
+        "id": "tlf",
+        "name": "The Local Farmer",
+        "role": "Farm / Supply + FND",
+        "status": "active",
+        "priority": 2,
+        "focus_metrics": [
+          "ops.output_units",
+          "fin.gross_margin",
+          "ops.quality_score",
+          "ops.delivery_on_time",
+          "impact.people_helped"
+        ]
+      },
+      {
+        "id": "infx",
+        "name": "INFX Solutions",
+        "role": "Zoho Implementation / Digitisation",
+        "status": "active",
+        "priority": 1,
+        "focus_metrics": [
+          "fin.revenue",
+          "sal.nrr",
+          "ops.delivery_on_time",
+          "ops.csat",
+          "fin.recurring_ratio"
+        ]
+      },
+      {
+        "id": "fluxflow",
+        "name": "FluxFlow",
+        "role": "ETL + Agentic AI Product",
+        "status": "active_development",
+        "priority": 1,
+        "focus_metrics": [
+          "fin.runway",
+          "sal.pipeline",
+          "it.automation_coverage",
+          "it.ai_adoption",
+          "sal.churn"
+        ]
+      },
+      {
+        "id": "divorced",
+        "name": "Divorced Dads",
+        "role": "Family Law Tech App",
+        "status": "active_development",
+        "priority": 2,
+        "focus_metrics": [
+          "fin.runway",
+          "impact.purpose_score",
+          "mkt.community_size",
+          "impact.people_helped"
+        ]
+      },
+      {
+        "id": "papapasta",
+        "name": "Papa Pasta",
+        "role": "FND — Food Franchise",
+        "status": "proposed",
+        "priority": 1,
+        "focus_metrics": [
+          "ops.unit_margin",
+          "ops.quality_score",
+          "fin.gross_margin",
+          "impact.people_helped"
+        ],
+        "note": "In the Funnel Tracker as an FND product but absent from both predecessor schemas. See reconciliation_gaps."
+      },
+      {
+        "id": "acdc",
+        "name": "ACDC Express",
+        "role": "FND — Franchisor",
+        "status": "proposed",
+        "priority": 2,
+        "focus_metrics": [
+          "ops.unit_margin",
+          "ops.sop_compliance",
+          "impact.jobs_sustained"
+        ],
+        "note": "In the Funnel Tracker as an FND product but absent from both predecessor schemas."
+      }
+    ],
+    "products": {
+      "note": "The Funnel Tracker measures nine PRODUCTS. The measurement system measures BRANDS. These are different granularities and do not map one-to-one. Every product must resolve to a brand for roll-up.",
+      "items": [
+        {
+          "id": "inf_consultancy",
+          "name": "INF Consultancy",
+          "line": "professional_services",
+          "brand": "infinity",
+          "output_unit": "ZAR"
+        },
+        {
+          "id": "sla_finance",
+          "name": "SLA — Finance",
+          "line": "professional_services",
+          "brand": "infinity",
+          "output_unit": "ZAR"
+        },
+        {
+          "id": "sla_hr",
+          "name": "SLA — HR",
+          "line": "professional_services",
+          "brand": "infinity",
+          "output_unit": "ZAR"
+        },
+        {
+          "id": "sla_zeestore",
+          "name": "SLA — ZeeStore",
+          "line": "professional_services",
+          "brand": "infinity",
+          "output_unit": "ZAR"
+        },
+        {
+          "id": "infx_solutions",
+          "name": "INFX Solutions",
+          "line": "professional_services",
+          "brand": "infx",
+          "output_unit": "ZAR"
+        },
+        {
+          "id": "fluxflow",
+          "name": "FluxFlow",
+          "line": "professional_services",
+          "brand": "fluxflow",
+          "output_unit": "ZAR"
+        },
+        {
+          "id": "acdc_express",
+          "name": "ACDC Express",
+          "line": "fnd",
+          "brand": "acdc",
+          "output_unit": "franchise_locations"
+        },
+        {
+          "id": "tlf",
+          "name": "The Local Farmer",
+          "line": "fnd",
+          "brand": "tlf",
+          "output_unit": "franchise_locations"
+        },
+        {
+          "id": "papa_pasta",
+          "name": "Papa Pasta",
+          "line": "fnd",
+          "brand": "papapasta",
+          "output_unit": "franchise_locations"
+        }
+      ],
+      "unmapped_brands": [
+        "divorced"
+      ],
+      "unmapped_note": "Divorced Dads has no funnel tracker product. It needs either a tenth funnel tab or an explicit exemption on record."
+    },
+    "departments": [
+      {
+        "id": "fin",
+        "name": "Finance",
+        "north_star": "fin.runway"
+      },
+      {
+        "id": "hr",
+        "name": "HR",
+        "north_star": "hr.rev_per_fte"
+      },
+      {
+        "id": "it",
+        "name": "IT",
+        "north_star": "it.system_uptime"
+      },
+      {
+        "id": "mkt",
+        "name": "Marketing",
+        "north_star": "mkt.cost_per_lead"
+      },
+      {
+        "id": "sal",
+        "name": "Sales",
+        "north_star": "sal.pipeline_coverage"
+      },
+      {
+        "id": "ops",
+        "name": "Brand Operations",
+        "north_star": "ops.quality_score"
+      },
+      {
+        "id": "founder",
+        "name": "Founder Freedom",
+        "north_star": "founder.escalations"
+      },
+      {
+        "id": "impact",
+        "name": "Purpose & Impact",
+        "north_star": "impact.people_helped"
+      }
+    ],
+    "teams": [
+      {
+        "id": "marketing",
+        "name": "Marketing",
+        "owns_funnel_stage": 1
+      },
+      {
+        "id": "sdr",
+        "name": "SDR",
+        "owns_funnel_stage": 2
+      },
+      {
+        "id": "dealmaker",
+        "name": "Dealmaker",
+        "owns_funnel_stage": 3
+      }
+    ]
+  },
+  "funnel_model": {
+    "description": "The Sales & Marketing Funnel Tracker model, wired into the measurement system as the sales engine. Previously absent from both predecessor schemas.",
+    "equation": "Leads × Conversion % = Output",
+    "grain": "per product, per month",
+    "horizon_months": 24,
+    "source_workbook": "Sales & Marketing Funnel Tracker (Zoho Sheet, 15 tabs)",
+    "stages": [
+      {
+        "stage": 1,
+        "team": "marketing",
+        "input": "mkt.marketing_spend",
+        "output": "funnel.leads",
+        "conversion_out": "funnel.conv_lead_to_opp",
+        "accountable_for": "volume and cost of leads"
+      },
+      {
+        "stage": 2,
+        "team": "sdr",
+        "input": "funnel.leads",
+        "output": "funnel.opportunities",
+        "conversion_out": "funnel.conv_opp_to_close",
+        "accountable_for": "qualification quality"
+      },
+      {
+        "stage": 3,
+        "team": "dealmaker",
+        "input": "funnel.opportunities",
+        "output": "funnel.output",
+        "conversion_out": null,
+        "accountable_for": "close rate and deal value"
+      }
+    ],
+    "output_units": {
+      "professional_services": {
+        "unit": "ZAR",
+        "metric": "funnel.output_zar"
+      },
+      "fnd": {
+        "unit": "franchise_locations",
+        "metric": "funnel.output_locations",
+        "note": "FND products are NEVER measured in Rand at funnel level. Locations sold is the output. Rand follows later via ops.unit_margin."
+      }
+    },
+    "scope_decisions_carried_forward": {
+      "source_level_attribution": {
+        "included": false,
+        "reason": "Explicitly descoped at funnel tracker design stage"
+      },
+      "cycle_time_tracking": {
+        "included": false,
+        "reason": "Explicitly descoped at funnel tracker design stage. NOTE: cerebro v1.0 re-introduced sal.cycle_length in breach of this decision; removed in v2.0 pending an explicit reversal."
+      },
+      "zoho_crm_integration": {
+        "included": false,
+        "reason": "Deferred, not yet scoped"
+      }
+    }
+  },
+  "metrics": [
+    {
+      "id": "fin.revenue",
+      "name": "Revenue (month)",
+      "department": "fin",
+      "layer": 2,
+      "definition": "Monthly revenue booked, per brand.",
+      "formula": "sum(revenue)",
+      "type": "lagging",
+      "unit": "ZAR",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "brand_specific"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "fin.gross_margin",
+      "name": "Gross Margin",
+      "department": "fin",
+      "layer": 2,
+      "definition": "(Revenue − COGS) / Revenue.",
+      "formula": "(revenue - cogs) / revenue",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "per_brand",
+        "values": {
+          "infx": 60,
+          "fluxflow": 70,
+          "divorced": 70,
+          "infinity": 55,
+          "tlf": 30,
+          "papapasta": 65,
+          "acdc": 25
+        }
+      },
+      "thresholds": {
+        "green": "target",
+        "amber": "target * 0.9",
+        "red": "below"
+      },
+      "cadence": "monthly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "correction_note": "Hermes v1 applied a flat >=60% group-wide. A farm and a franchisor cannot carry software margins; a single target would show permanent red on TLF and ACDC and permanent green on nothing useful."
+    },
+    {
+      "id": "fin.net_burn",
+      "name": "Net Burn",
+      "department": "fin",
+      "layer": 2,
+      "definition": "Monthly net cash outflow.",
+      "formula": "cash_out - cash_in",
+      "type": "lagging",
+      "unit": "ZAR",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "expression",
+        "value": "< fin.revenue"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "fin.runway",
+      "name": "Runway",
+      "department": "fin",
+      "layer": 1,
+      "block": "Survival",
+      "definition": "Cash balance divided by monthly net burn.",
+      "formula": "cash_balance / net_burn",
+      "type": "lagging",
+      "unit": "months",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 12
+      },
+      "thresholds": {
+        "green": 12,
+        "amber": 6,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "fin.dso",
+      "name": "Debtor Days",
+      "department": "fin",
+      "layer": 3,
+      "definition": "Average days to collect receivables.",
+      "formula": "(accounts_receivable / revenue) * days_in_period",
+      "type": "leading",
+      "unit": "days",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 30
+      },
+      "thresholds": {
+        "green": 30,
+        "amber": 45,
+        "red": 999
+      },
+      "cadence": "weekly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "fin.opex_ratio",
+      "name": "Opex as % of Revenue",
+      "department": "fin",
+      "layer": 3,
+      "definition": "Operating expenditure as a share of revenue.",
+      "formula": "opex / revenue",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "brand_specific"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "fin.recurring_ratio",
+      "name": "Recurring Revenue Ratio",
+      "department": "fin",
+      "layer": 1,
+      "block": "Growth",
+      "definition": "Recurring revenue as a share of total revenue.",
+      "formula": "recurring_revenue / total_revenue",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 40
+      },
+      "thresholds": {
+        "green": 40,
+        "amber": 30,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "fin.ltv_cac",
+      "name": "LTV:CAC Ratio",
+      "department": "fin",
+      "layer": 2,
+      "definition": "Lifetime value divided by customer acquisition cost.",
+      "formula": "ltv / cac",
+      "type": "lagging",
+      "unit": "ratio",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 3.0
+      },
+      "thresholds": {
+        "green": 3.0,
+        "amber": 1.5,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "zoho_crm",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "fin.payback",
+      "name": "CAC Payback Period",
+      "department": "fin",
+      "layer": 3,
+      "definition": "CAC divided by monthly gross margin per customer.",
+      "formula": "cac / monthly_gross_margin_per_customer",
+      "type": "lagging",
+      "unit": "months",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 12
+      },
+      "thresholds": {
+        "green": 12,
+        "amber": 18,
+        "red": 999
+      },
+      "cadence": "monthly",
+      "source": "zoho_crm",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "fin.revenue_vs_plan",
+      "name": "Revenue vs Plan",
+      "department": "fin",
+      "layer": 1,
+      "block": "Growth",
+      "definition": "Month-to-date actual revenue divided by month-to-date budget, all brands.",
+      "formula": "sum(revenue_mtd) / sum(budget_mtd)",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 100
+      },
+      "thresholds": {
+        "green": 100,
+        "amber": 90,
+        "red": 0
+      },
+      "cadence": "weekly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "hr.headcount",
+      "name": "Headcount",
+      "department": "hr",
+      "layer": 3,
+      "definition": "Staff per brand, FTE.",
+      "formula": "count(active_employees)",
+      "type": "lagging",
+      "unit": "people",
+      "direction": "band",
+      "target": {
+        "mode": "vs_plan"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "zoho_people",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "hr.rev_per_fte",
+      "name": "Revenue per FTE",
+      "department": "hr",
+      "layer": 1,
+      "block": "Foundation",
+      "definition": "Trailing twelve-month revenue divided by FTE headcount.",
+      "formula": "revenue_ttm / fte_headcount",
+      "type": "lagging",
+      "unit": "ZAR",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "trend",
+        "value": "improve_yoy"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "hr.attrition",
+      "name": "Voluntary Attrition (12m)",
+      "department": "hr",
+      "layer": 3,
+      "definition": "Voluntary leavers as a share of average headcount over twelve months.",
+      "formula": "voluntary_leavers_12m / avg_headcount_12m",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 12
+      },
+      "thresholds": {
+        "green": 12,
+        "amber": 18,
+        "red": 100
+      },
+      "cadence": "monthly",
+      "source": "zoho_people",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "hr.new_hire_90d",
+      "name": "90-Day New Hire Success",
+      "department": "hr",
+      "layer": 3,
+      "definition": "New hires still employed and meeting expectations at ninety days.",
+      "formula": "count(successful_90d) / count(hires)",
+      "type": "leading",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 85
+      },
+      "thresholds": {
+        "green": 85,
+        "amber": 70,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "zoho_people",
+      "owner": "TBC",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true,
+      "note": "Below 85% the cause is almost always hiring on interviews rather than paid trial work."
+    },
+    {
+      "id": "hr.team_satisfaction",
+      "name": "Team Satisfaction",
+      "department": "hr",
+      "layer": 2,
+      "definition": "Employee satisfaction survey score, 1-10.",
+      "formula": "avg(survey_score)",
+      "type": "leading",
+      "unit": "score_10",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 7.5
+      },
+      "thresholds": {
+        "green": 7.5,
+        "amber": 6.0,
+        "red": 0
+      },
+      "cadence": "quarterly",
+      "source": "survey",
+      "owner": "TBC",
+      "framework_pillar": "squibb",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "hr.training_hours",
+      "name": "Training Hours",
+      "department": "hr",
+      "layer": 3,
+      "definition": "Training hours per person per month.",
+      "formula": "training_hours / headcount",
+      "type": "leading",
+      "unit": "hours_per_person_month",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 4
+      },
+      "thresholds": {
+        "green": 4,
+        "amber": 2,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "zoho_people",
+      "owner": "TBC",
+      "framework_pillar": "squibb",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "hr.playbook_coverage",
+      "name": "Playbook Coverage",
+      "department": "hr",
+      "layer": 1,
+      "block": "Foundation",
+      "definition": "Roles with a current documented playbook divided by total roles.",
+      "formula": "count(roles_with_current_playbook) / count(roles)",
+      "type": "leading",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 80
+      },
+      "thresholds": {
+        "green": 80,
+        "amber": 60,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "coda",
+      "owner": "TBC",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "it.system_uptime",
+      "name": "System Uptime",
+      "department": "it",
+      "layer": 2,
+      "definition": "Availability of production systems.",
+      "formula": "uptime_minutes / total_minutes",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 99
+      },
+      "thresholds": {
+        "green": 99,
+        "amber": 97,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "infra_monitoring",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "it.mttr_p1",
+      "name": "Mean Time to Resolve (P1)",
+      "department": "it",
+      "layer": 3,
+      "definition": "Average hours to resolve priority-one incidents.",
+      "formula": "avg(resolved_at - raised_at) where priority = P1",
+      "type": "leading",
+      "unit": "hours",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 4
+      },
+      "thresholds": {
+        "green": 4,
+        "amber": 8,
+        "red": 999
+      },
+      "cadence": "weekly",
+      "source": "zoho_desk",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "it.open_tickets",
+      "name": "Open Tickets",
+      "department": "it",
+      "layer": 3,
+      "definition": "Support ticket backlog size.",
+      "formula": "count(tickets where status = open)",
+      "type": "leading",
+      "unit": "tickets",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 10
+      },
+      "thresholds": {
+        "green": 10,
+        "amber": 20,
+        "red": 9999
+      },
+      "cadence": "weekly",
+      "source": "zoho_desk",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "it.automation_coverage",
+      "name": "Automation Coverage",
+      "department": "it",
+      "layer": 2,
+      "definition": "Automated processes divided by total repeatable processes.",
+      "formula": "count(automated) / count(repeatable)",
+      "type": "leading",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 50
+      },
+      "thresholds": {
+        "green": 50,
+        "amber": 35,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "it.ai_adoption",
+      "name": "AI Adoption",
+      "department": "it",
+      "layer": 2,
+      "definition": "Share of team actively using AI tools in their workflow.",
+      "formula": "count(active_ai_users) / headcount",
+      "type": "leading",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 40
+      },
+      "thresholds": {
+        "green": 40,
+        "amber": 25,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "it.mfa_coverage",
+      "name": "MFA Coverage",
+      "department": "it",
+      "layer": 3,
+      "definition": "Accounts with multi-factor authentication enforced.",
+      "formula": "count(accounts_with_mfa) / count(accounts)",
+      "type": "leading",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 100
+      },
+      "thresholds": {
+        "green": 100,
+        "amber": 95,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "directory",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "it.tech_debt",
+      "name": "Codebase Health Score",
+      "department": "it",
+      "layer": 3,
+      "definition": "Codebase health rated 1-10 where 10 is clean.",
+      "formula": "manual_assessment",
+      "type": "leading",
+      "unit": "score_10",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 7
+      },
+      "thresholds": {
+        "green": 7,
+        "amber": 5,
+        "red": 0
+      },
+      "cadence": "quarterly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "correction_note": "Hermes v1 defined 10 = clean but set target '< 5', which targets a broken codebase. Renamed and inverted so direction and target agree."
+    },
+    {
+      "id": "mkt.marketing_spend",
+      "name": "Marketing Spend",
+      "department": "mkt",
+      "layer": 2,
+      "definition": "Total marketing spend in the period, per product.",
+      "formula": "sum(marketing_spend)",
+      "type": "leading",
+      "unit": "ZAR",
+      "direction": "band",
+      "target": {
+        "mode": "vs_plan"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "funnel_stage": 1
+    },
+    {
+      "id": "mkt.cost_per_lead",
+      "name": "Cost per Lead",
+      "department": "mkt",
+      "layer": 1,
+      "block": "Growth",
+      "definition": "Marketing spend divided by leads generated.",
+      "formula": "mkt.marketing_spend / funnel.leads",
+      "type": "lagging",
+      "unit": "ZAR",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "trend",
+        "value": "decrease_qoq"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "calc",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "funnel_stage": 1
+    },
+    {
+      "id": "mkt.marketing_roi",
+      "name": "Marketing ROI",
+      "department": "mkt",
+      "layer": 2,
+      "definition": "Output value attributable to marketing divided by marketing spend.",
+      "formula": "funnel.output_zar / mkt.marketing_spend",
+      "type": "lagging",
+      "unit": "ratio",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 3.0
+      },
+      "thresholds": {
+        "green": 3.0,
+        "amber": 2.0,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "calc",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "mkt.brand_reach",
+      "name": "Brand Reach",
+      "department": "mkt",
+      "layer": 3,
+      "definition": "Total audience size across owned channels.",
+      "formula": "sum(audience_all_channels)",
+      "type": "leading",
+      "unit": "audience",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "trend",
+        "value": "growing"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "social_analytics",
+      "owner": "TBC",
+      "framework_pillar": "squibb",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "mkt.help_first_content",
+      "name": "Help-First Content",
+      "department": "mkt",
+      "layer": 2,
+      "definition": "Free value pieces published with no gate and no catch.",
+      "formula": "count(free_assets_published)",
+      "type": "leading",
+      "unit": "pieces_per_month",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 4
+      },
+      "thresholds": {
+        "green": 4,
+        "amber": 2,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": "squibb",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "mkt.community_size",
+      "name": "Community Size",
+      "department": "mkt",
+      "layer": 2,
+      "definition": "Followers, members and engaged community across channels.",
+      "formula": "sum(community_members)",
+      "type": "leading",
+      "unit": "people",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "trend",
+        "value": "growing"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "social_analytics",
+      "owner": "TBC",
+      "framework_pillar": "squibb",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "sal.pipeline",
+      "name": "Pipeline Value",
+      "department": "sal",
+      "layer": 2,
+      "definition": "Total value of open deals.",
+      "formula": "sum(open_deal_value)",
+      "type": "leading",
+      "unit": "ZAR",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "expression",
+        "value": ">= 3 * monthly_target"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "weekly",
+      "source": "zoho_crm",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "sal.pipeline_coverage",
+      "name": "Pipeline Coverage",
+      "department": "sal",
+      "layer": 1,
+      "block": "Growth",
+      "definition": "Weighted open pipeline divided by next-period target.",
+      "formula": "sum(pipeline_value * probability) / period_target",
+      "type": "leading",
+      "unit": "ratio",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 3.0
+      },
+      "thresholds": {
+        "green": 3.0,
+        "amber": 2.5,
+        "red": 0
+      },
+      "cadence": "weekly",
+      "source": "zoho_crm",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "sal.deals_won",
+      "name": "Deals Won",
+      "department": "sal",
+      "layer": 2,
+      "definition": "Closed-won deals in the period.",
+      "formula": "count(deals where status = won)",
+      "type": "lagging",
+      "unit": "deals",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "brand_specific"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "zoho_crm",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "sal.win_rate",
+      "name": "Win Rate",
+      "department": "sal",
+      "layer": 3,
+      "definition": "Deals won divided by deals closed.",
+      "formula": "count(won) / count(closed)",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 25
+      },
+      "thresholds": {
+        "green": 25,
+        "amber": 18,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "zoho_crm",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "sal.avg_deal_size",
+      "name": "Average Deal Size",
+      "department": "sal",
+      "layer": 3,
+      "definition": "Won value divided by won count.",
+      "formula": "sum(won_value) / count(won)",
+      "type": "lagging",
+      "unit": "ZAR",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "trend",
+        "value": "improve_qoq"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "zoho_crm",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "sal.nrr",
+      "name": "Net Revenue Retention",
+      "department": "sal",
+      "layer": 2,
+      "definition": "Revenue retained plus expanded from existing customers, over opening revenue.",
+      "formula": "(opening + expansion - churn - contraction) / opening",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 100
+      },
+      "thresholds": {
+        "green": 100,
+        "amber": 90,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "zoho_crm",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "sal.churn",
+      "name": "Churn",
+      "department": "sal",
+      "layer": 2,
+      "definition": "Customers lost divided by total customers.",
+      "formula": "count(lost) / count(total)",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 3
+      },
+      "thresholds": {
+        "green": 3,
+        "amber": 5,
+        "red": 100
+      },
+      "cadence": "monthly",
+      "source": "zoho_crm",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "ops.output_units",
+      "name": "Production Output",
+      "department": "ops",
+      "layer": 2,
+      "definition": "Units or kilograms produced. TLF: mushrooms, microgreens.",
+      "formula": "sum(units_produced)",
+      "type": "lagging",
+      "unit": "units_or_kg",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "brand_specific"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "weekly",
+      "source": "tlf_app",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "ops.quality_score",
+      "name": "Quality Score",
+      "department": "ops",
+      "layer": 2,
+      "definition": "Product or service quality rating, 1-10.",
+      "formula": "avg(quality_rating)",
+      "type": "leading",
+      "unit": "score_10",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 8
+      },
+      "thresholds": {
+        "green": 8,
+        "amber": 6.5,
+        "red": 0
+      },
+      "cadence": "weekly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": "squibb",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "ops.delivery_on_time",
+      "name": "On-Time Delivery",
+      "department": "ops",
+      "layer": 2,
+      "definition": "Deliveries on time divided by total deliveries.",
+      "formula": "count(on_time) / count(total)",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 95
+      },
+      "thresholds": {
+        "green": 95,
+        "amber": 88,
+        "red": 0
+      },
+      "cadence": "weekly",
+      "source": "zoho_inventory",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "ops.csat",
+      "name": "Customer Satisfaction",
+      "department": "ops",
+      "layer": 2,
+      "definition": "Customer satisfaction rating, 1-10.",
+      "formula": "avg(csat_score)",
+      "type": "lagging",
+      "unit": "score_10",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 8.5
+      },
+      "thresholds": {
+        "green": 8.5,
+        "amber": 7.0,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "survey",
+      "owner": "TBC",
+      "framework_pillar": "squibb",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "ops.unit_margin",
+      "name": "Margin per Unit / Site",
+      "department": "ops",
+      "layer": 2,
+      "definition": "Gross margin generated per operating unit or franchise site.",
+      "formula": "unit_gross_margin",
+      "type": "lagging",
+      "unit": "ZAR",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "vs_plan"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "note": "This is where FND revenue is actually measured. The funnel measures locations sold; this measures what each location earns."
+    },
+    {
+      "id": "ops.sop_compliance",
+      "name": "SOP / Audit Compliance",
+      "department": "ops",
+      "layer": 3,
+      "definition": "Score achieved on the standard operating audit.",
+      "formula": "audit_score",
+      "type": "leading",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 90
+      },
+      "thresholds": {
+        "green": 90,
+        "amber": 80,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "coda",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "founder.buyback_rate",
+      "name": "Buyback Rate",
+      "department": "founder",
+      "layer": 1,
+      "block": "Founder Freedom",
+      "definition": "Ricardo's effective hourly rate divided by four. The Rand threshold below which a task should be delegated rather than done.",
+      "formula": "(annual_pretax_income / annual_hours_worked) / 4",
+      "type": "lagging",
+      "unit": "ZAR_per_hour",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "recalculate",
+        "value": "quarterly"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "quarterly",
+      "source": "calc",
+      "owner": "Ricardo Da Costa Maio",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true,
+      "correction_note": "Hermes v1 defined buyback_rate as 'HVA time / total work time' with a 50% target. That is Martell's Production-quadrant measure, not the Buyback Rate. The Buyback Rate is a currency-per-hour delegation threshold. Both are useful; they are now separate metrics and correctly named."
+    },
+    {
+      "id": "founder.production_pct",
+      "name": "High-Value Activity Time",
+      "department": "founder",
+      "layer": 1,
+      "block": "Founder Freedom",
+      "definition": "Share of working hours spent in the Production quadrant of the DRIP matrix.",
+      "formula": "hours_high_value / total_hours_worked",
+      "type": "leading",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 50
+      },
+      "thresholds": {
+        "green": 50,
+        "amber": 40,
+        "red": 0
+      },
+      "cadence": "weekly",
+      "source": "manual_capture",
+      "owner": "Ricardo Da Costa Maio",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "founder.delegation_ratio",
+      "name": "Delegation Ratio",
+      "department": "founder",
+      "layer": 2,
+      "definition": "Tasks delegated divided by tasks owned.",
+      "formula": "count(delegated) / count(owned)",
+      "type": "leading",
+      "unit": "ratio",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 0.5
+      },
+      "thresholds": {
+        "green": 0.5,
+        "amber": 0.35,
+        "red": 0
+      },
+      "cadence": "weekly",
+      "source": "manual_capture",
+      "owner": "Ricardo Da Costa Maio",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "founder.escalations",
+      "name": "Decisions Escalated to CEO",
+      "department": "founder",
+      "layer": 1,
+      "block": "Founder Freedom",
+      "definition": "Count of decisions in the week that could not be closed without Ricardo.",
+      "formula": "count(decisions where required_ceo = true)",
+      "type": "leading",
+      "unit": "count_per_week",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 5
+      },
+      "thresholds": {
+        "green": 5,
+        "amber": 10,
+        "red": 999
+      },
+      "cadence": "weekly",
+      "source": "coda",
+      "owner": "TBC",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true,
+      "note": "The most diagnostic number in the system. Rising means the business is becoming a job rather than an asset."
+    },
+    {
+      "id": "founder.eliminated_tasks",
+      "name": "Eliminated Tasks",
+      "department": "founder",
+      "layer": 3,
+      "definition": "Low-value tasks removed from workflows entirely.",
+      "formula": "count(tasks_eliminated)",
+      "type": "leading",
+      "unit": "tasks_per_quarter",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 5
+      },
+      "thresholds": {
+        "green": 5,
+        "amber": 3,
+        "red": 0
+      },
+      "cadence": "quarterly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "founder.ladder_position",
+      "name": "Replacement Ladder Position",
+      "department": "founder",
+      "layer": 2,
+      "definition": "Highest filled rung of the Replacement Ladder, per brand, scored 0-5.",
+      "formula": "max(rung where filled = true)",
+      "type": "leading",
+      "unit": "score_5",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "trend",
+        "value": "advance_one_rung_per_year"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "quarterly",
+      "source": "coda",
+      "owner": "TBC",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true
+    },
+    {
+      "id": "impact.people_helped",
+      "name": "People Helped",
+      "department": "impact",
+      "layer": 1,
+      "block": "Foundation",
+      "definition": "Cumulative people positively impacted — customers, franchisees, employees, community.",
+      "formula": "sum(people_impacted)",
+      "type": "lagging",
+      "unit": "people",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "trend",
+        "value": "growing"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "manual_capture",
+      "owner": "Ricardo Da Costa Maio",
+      "framework_pillar": "squibb",
+      "impact_metric": true,
+      "active": true
+    },
+    {
+      "id": "impact.purpose_score",
+      "name": "Purpose Score",
+      "department": "impact",
+      "layer": 2,
+      "definition": "Clarity and strength of brand mission, 1-10. Scored by whether the team can state the Dream unprompted.",
+      "formula": "manual_assessment",
+      "type": "leading",
+      "unit": "score_10",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 8
+      },
+      "thresholds": {
+        "green": 8,
+        "amber": 6,
+        "red": 0
+      },
+      "cadence": "quarterly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": "squibb",
+      "impact_metric": true,
+      "active": true
+    },
+    {
+      "id": "impact.jobs_sustained",
+      "name": "Jobs Sustained",
+      "department": "impact",
+      "layer": 2,
+      "definition": "Total FTE plus franchise-level employment supported by the group.",
+      "formula": "fte_headcount + franchise_employment",
+      "type": "lagging",
+      "unit": "people",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "trend",
+        "value": "growing"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "quarterly",
+      "source": "zoho_people",
+      "owner": "TBC",
+      "framework_pillar": "squibb",
+      "impact_metric": true,
+      "active": true
+    },
+    {
+      "id": "funnel.leads",
+      "name": "Leads Generated",
+      "department": "mkt",
+      "layer": 2,
+      "grain": "product",
+      "definition": "New leads generated in the month, per product. Stage 1 output.",
+      "formula": "count(leads)",
+      "type": "leading",
+      "unit": "leads",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "product_specific"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "funnel_tracker",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "funnel_stage": 1,
+      "team": "marketing"
+    },
+    {
+      "id": "funnel.conv_lead_to_opp",
+      "name": "Conversion — Lead to Opportunity",
+      "department": "sal",
+      "layer": 2,
+      "grain": "product",
+      "definition": "Leads converted to qualified opportunities. This is the SDR team's number.",
+      "formula": "funnel.opportunities / funnel.leads",
+      "type": "leading",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "product_specific"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "funnel_tracker",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "funnel_stage": 2,
+      "team": "sdr"
+    },
+    {
+      "id": "funnel.opportunities",
+      "name": "Qualified Opportunities",
+      "department": "sal",
+      "layer": 2,
+      "grain": "product",
+      "definition": "Leads qualified into opportunities. Stage 2 output.",
+      "formula": "count(opportunities)",
+      "type": "leading",
+      "unit": "opportunities",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "product_specific"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "funnel_tracker",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "funnel_stage": 2,
+      "team": "sdr"
+    },
+    {
+      "id": "funnel.cost_per_opportunity",
+      "name": "Cost per Opportunity",
+      "department": "mkt",
+      "layer": 3,
+      "grain": "product",
+      "definition": "Marketing spend divided by qualified opportunities produced.",
+      "formula": "mkt.marketing_spend / funnel.opportunities",
+      "type": "lagging",
+      "unit": "ZAR",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "trend",
+        "value": "decrease_qoq"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "calc",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "funnel_stage": 2
+    },
+    {
+      "id": "funnel.conv_opp_to_close",
+      "name": "Conversion — Opportunity to Close",
+      "department": "sal",
+      "layer": 2,
+      "grain": "product",
+      "definition": "Opportunities converted to closed business. This is the Dealmaker team's number.",
+      "formula": "funnel.closed_count / funnel.opportunities",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "product_specific"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "funnel_tracker",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "funnel_stage": 3,
+      "team": "dealmaker"
+    },
+    {
+      "id": "funnel.output_zar",
+      "name": "Funnel Output — Value",
+      "department": "sal",
+      "layer": 1,
+      "block": "Growth",
+      "grain": "product",
+      "definition": "Closed business value. Applies to professional services product lines only.",
+      "formula": "sum(closed_value)",
+      "type": "lagging",
+      "unit": "ZAR",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "product_specific"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "funnel_tracker",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "funnel_stage": 3,
+      "applies_to_lines": [
+        "professional_services"
+      ]
+    },
+    {
+      "id": "funnel.output_locations",
+      "name": "Funnel Output — Locations Sold",
+      "department": "sal",
+      "layer": 1,
+      "block": "Growth",
+      "grain": "product",
+      "definition": "Franchise locations sold. Applies to FND product lines only. Never expressed in Rand at funnel level.",
+      "formula": "count(locations_sold)",
+      "type": "lagging",
+      "unit": "franchise_locations",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "product_specific"
+      },
+      "thresholds": {
+        "green": null,
+        "amber": null,
+        "red": null
+      },
+      "cadence": "monthly",
+      "source": "funnel_tracker",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "funnel_stage": 3,
+      "applies_to_lines": [
+        "fnd"
+      ]
+    }
+  ],
+  "ceo_twelve": {
+    "description": "Layer 1. Ricardo's only screen. Twenty minutes, Monday morning. References into the metric library — no separate definitions.",
+    "blocks": {
+      "Survival": [
+        "fin.runway",
+        "fin.net_burn",
+        "fin.gross_margin"
+      ],
+      "Growth": [
+        "fin.revenue_vs_plan",
+        "sal.pipeline_coverage",
+        "funnel.output_zar"
+      ],
+      "Founder Freedom": [
+        "founder.buyback_rate",
+        "founder.production_pct",
+        "founder.escalations"
+      ],
+      "Foundation": [
+        "hr.playbook_coverage",
+        "hr.rev_per_fte",
+        "impact.people_helped"
+      ]
+    },
+    "note": "funnel.output_locations surfaces alongside funnel.output_zar for FND brands; it does not consume a separate slot."
+  },
+  "data_sources": {
+    "zoho_books": "Finance — revenue, margin, burn, runway, spend",
+    "zoho_crm": "Sales — pipeline, deals, CAC, LTV, NRR, churn",
+    "zoho_people": "HR — headcount, training, attrition",
+    "zoho_desk": "IT — tickets, MTTR",
+    "zoho_inventory": "Ops — delivery, output",
+    "funnel_tracker": "Funnel — leads, conversions, opportunities, output. Zoho Sheet workbook, 15 tabs, manual until CRM integration lands.",
+    "tlf_app": "TLF production data",
+    "social_analytics": "Reach, community",
+    "survey": "Satisfaction and CSAT scores",
+    "manual_capture": "Buyback, delegation, automation, AI adoption, purpose, people helped",
+    "infra_monitoring": "Uptime",
+    "directory": "Identity and MFA",
+    "coda": "Playbooks, escalations, audits, ladder scoring",
+    "calc": "Derived metrics — no primary source"
+  },
+  "alerting": {
+    "cadence": "weekly",
+    "channels": [
+      "discord",
+      "telegram"
+    ],
+    "principle": "Alert on red flips only. Never send green confirmations — they train people to ignore the channel.",
+    "rules": [
+      {
+        "metric": "fin.runway",
+        "condition": "< 6",
+        "severity": "critical"
+      },
+      {
+        "metric": "fin.runway",
+        "condition": "< 12",
+        "severity": "warning"
+      },
+      {
+        "metric": "fin.ltv_cac",
+        "condition": "< 1.5",
+        "severity": "critical"
+      },
+      {
+        "metric": "sal.churn",
+        "condition": "> 5",
+        "severity": "critical"
+      },
+      {
+        "metric": "sal.nrr",
+        "condition": "< 90",
+        "severity": "critical"
+      },
+      {
+        "metric": "sal.pipeline_coverage",
+        "condition": "< 2.0",
+        "severity": "critical"
+      },
+      {
+        "metric": "founder.production_pct",
+        "condition": "< 50",
+        "severity": "warning"
+      },
+      {
+        "metric": "founder.escalations",
+        "condition": "> 10",
+        "severity": "warning"
+      },
+      {
+        "metric": "fin.gross_margin",
+        "condition": "< target * 0.9",
+        "severity": "warning"
+      },
+      {
+        "metric": "funnel.conv_lead_to_opp",
+        "condition": "< target * 0.75",
+        "severity": "warning",
+        "note": "Isolates the SDR stage — tells you the bottleneck is qualification, not lead volume"
+      },
+      {
+        "metric": "funnel.conv_opp_to_close",
+        "condition": "< target * 0.75",
+        "severity": "warning",
+        "note": "Isolates the Dealmaker stage"
+      },
+      {
+        "metric": "hr.new_hire_90d",
+        "condition": "< 70",
+        "severity": "warning"
+      }
+    ]
+  },
+  "cadence": [
+    {
+      "id": "daily_pulse",
+      "when": "07:00 daily",
+      "duration_min": 3,
+      "attendees": [
+        "automated"
+      ],
+      "output": "Cash, prior-day sales per brand, red flips",
+      "channel": "discord"
+    },
+    {
+      "id": "weekly_ceo_review",
+      "when": "Monday 07:00",
+      "duration_min": 20,
+      "attendees": [
+        "Ricardo"
+      ],
+      "output": "CEO Twelve reviewed, week allocated"
+    },
+    {
+      "id": "weekly_scorecard",
+      "when": "Monday 08:00",
+      "duration_min": 60,
+      "attendees": [
+        "brand leads",
+        "Ricardo"
+      ],
+      "output": "Brand boards plus funnel by stage. 1-3-1 on every red."
+    },
+    {
+      "id": "monthly_business_review",
+      "when": "First Tuesday",
+      "duration_min": 120,
+      "attendees": [
+        "brand lead",
+        "dept heads"
+      ],
+      "output": "Full P&L, department boards, playbook audit, impact metrics"
+    },
+    {
+      "id": "quarterly_reset",
+      "when": "Quarter +1 week",
+      "duration_min": 240,
+      "attendees": [
+        "Ricardo",
+        "brand leads"
+      ],
+      "output": "Capital reallocation, DRIP audit, ladder rescore, funnel target reset"
+    },
+    {
+      "id": "annual_preload",
+      "when": "November",
+      "duration_min": 960,
+      "attendees": [
+        "Ricardo"
+      ],
+      "output": "Preloaded year, purpose review per brand, targets set"
+    }
+  ],
+  "escalation": {
+    "rule_1_3_1": {
+      "description": "Any red metric brought to a review arrives as one problem statement, three viable options, one recommendation from the owner.",
+      "applies_to": "everyone, including Ricardo"
+    },
+    "ladder": [
+      {
+        "weeks_red": 1,
+        "action": "Owner logs cause in Coda. No meeting time spent."
+      },
+      {
+        "weeks_red": 2,
+        "action": "1-3-1 at the weekly. Action assigned with owner and date."
+      },
+      {
+        "weeks_red": 3,
+        "action": "Playbook review. Person, process or target problem? Assume process first."
+      },
+      {
+        "weeks_red": 4,
+        "action": "Escalate to Quarterly Reset as a capital or structural question."
+      }
+    ]
+  },
+  "reconciliation_gaps": [
+    {
+      "id": "G1",
+      "severity": "high",
+      "title": "Funnel is three stages; both schemas modelled one",
+      "detail": "Hermes had a single lead_conversion (Leads → Customers, target 8%). Cerebro v1 had win_rate only. The Funnel Tracker splits conversion across Marketing → SDR → Dealmaker. Collapsing to one number makes it impossible to tell which team is the bottleneck, which is the entire purpose of the tracker.",
+      "resolution": "Added funnel.conv_lead_to_opp (SDR) and funnel.conv_opp_to_close (Dealmaker) as separate metrics with team attribution. Single-stage lead_conversion removed."
+    },
+    {
+      "id": "G2",
+      "severity": "high",
+      "title": "FND output unit mismatch",
+      "detail": "The Funnel Tracker measures FND products in franchise locations sold, never Rand. Both schemas expressed all sales output in ZAR (deals_won, revenue), which would silently convert locations into money at funnel level and corrupt comparisons.",
+      "resolution": "Split into funnel.output_zar (professional services) and funnel.output_locations (FND), each with applies_to_lines guards. FND Rand is captured downstream at ops.unit_margin."
+    },
+    {
+      "id": "G3",
+      "severity": "high",
+      "title": "Brand list does not cover the product list",
+      "detail": "The Funnel Tracker runs nine products. Hermes and Cerebro both listed five brands. Papa Pasta, ACDC Express, INF Consultancy and the three SLA products had no home. Divorced Dads has no funnel product.",
+      "resolution": "Added a products taxonomy with explicit product → brand mapping. Papa Pasta and ACDC Express added as proposed brands. Divorced Dads flagged as unmapped, needing a funnel tab or a recorded exemption."
+    },
+    {
+      "id": "G4",
+      "severity": "medium",
+      "title": "Marketing cost measured only as blended CAC",
+      "detail": "The Funnel Tracker carries cost-per metrics at each stage. Hermes had CAC only, at month and brand grain, sitting under Finance.",
+      "resolution": "Added mkt.cost_per_lead, funnel.cost_per_opportunity and mkt.marketing_roi at product grain under Marketing."
+    },
+    {
+      "id": "G5",
+      "severity": "medium",
+      "title": "Cycle time re-introduced against a prior scoping decision",
+      "detail": "sal.cycle_length appeared in cerebro v1.0 despite cycle time being explicitly descoped when the Funnel Tracker was designed.",
+      "resolution": "Removed. Recorded in funnel_model.scope_decisions_carried_forward so it does not creep back in silently."
+    },
+    {
+      "id": "G6",
+      "severity": "medium",
+      "title": "Buyback Rate was defined as something else",
+      "detail": "Hermes defined buyback_rate as HVA time over total work time with a 50% target. That is Martell's Production-quadrant measure. The Buyback Rate is a currency-per-hour delegation threshold: (income ÷ hours) ÷ 4.",
+      "resolution": "Split into founder.buyback_rate (ZAR/hour) and founder.production_pct (percent, target 50). Both retained, correctly named."
+    },
+    {
+      "id": "G7",
+      "severity": "medium",
+      "title": "Flat 60% gross margin target across the portfolio",
+      "detail": "A farm, a franchisor and a SaaS product cannot share a margin target. TLF and ACDC would show permanent red regardless of performance.",
+      "resolution": "fin.gross_margin now carries per-brand targets."
+    },
+    {
+      "id": "G8",
+      "severity": "low",
+      "title": "Tech debt target contradicted its own scale",
+      "detail": "Defined as 1-10 where 10 = clean, then targeted '< 5' — i.e. targeting a broken codebase.",
+      "resolution": "Renamed to Codebase Health Score, direction set higher_is_better, target 7."
+    },
+    {
+      "id": "G9",
+      "severity": "high",
+      "title": "No metric had an owner",
+      "detail": "Hermes had no owner field at all. Cerebro had the field but every value was TBC.",
+      "resolution": "Field retained and required. Still TBC — this is the Phase 1 blocker and cannot be solved by a schema."
+    }
+  ],
+  "implementation_phases": [
+    {
+      "phase": 1,
+      "name": "Dashboard artifact",
+      "status": "done"
+    },
+    {
+      "phase": 2,
+      "name": "Name an owner for each of the CEO Twelve",
+      "status": "pending",
+      "blocker": true
+    },
+    {
+      "phase": 3,
+      "name": "Resolve product-to-brand mapping (Papa Pasta, ACDC, Divorced Dads)",
+      "status": "pending",
+      "blocker": true
+    },
+    {
+      "phase": 4,
+      "name": "Wire Zoho data via Zoho MCP + Google Workspace OAuth",
+      "status": "pending"
+    },
+    {
+      "phase": 5,
+      "name": "Funnel Tracker feeds funnel.* metrics (manual, then CRM)",
+      "status": "pending"
+    },
+    {
+      "phase": 6,
+      "name": "FluxFlow pipeline ingests all sources",
+      "status": "pending"
+    },
+    {
+      "phase": 7,
+      "name": "Weekly automated briefing cron (Warren W)",
+      "status": "pending"
+    }
+  ],
+  "open_decisions": [
+    {
+      "id": 1,
+      "question": "Papa Pasta and ACDC Express are Funnel Tracker products with no brand board. Promote to full brands, or report inside Infinity Brands?",
+      "blocks_phase": 3
+    },
+    {
+      "id": 2,
+      "question": "Divorced Dads has no funnel product. Add a tenth funnel tab, or record an explicit exemption?",
+      "blocks_phase": 3
+    },
+    {
+      "id": 3,
+      "question": "INF Consultancy and the three SLA products currently roll into Infinity Brands. Correct, or do they need their own board?",
+      "blocks_phase": 3
+    },
+    {
+      "id": 4,
+      "question": "Per-brand gross margin targets are estimates. Confirm or replace with plan figures.",
+      "blocks_phase": 4
+    },
+    {
+      "id": 5,
+      "question": "Named owners for all twelve Layer 1 metrics. The system does not function with 'Finance' as an owner.",
+      "blocks_phase": 2
+    },
+    {
+      "id": 6,
+      "question": "Reinstate cycle time tracking, or keep it descoped as originally decided?",
+      "blocks_phase": 5
+    }
+  ],
+  "enums": {
+    "layer": [
+      1,
+      2,
+      3
+    ],
+    "block": [
+      "Survival",
+      "Growth",
+      "Founder Freedom",
+      "Foundation"
+    ],
+    "type": [
+      "leading",
+      "lagging"
+    ],
+    "direction": [
+      "higher_is_better",
+      "lower_is_better",
+      "band"
+    ],
+    "cadence": [
+      "daily",
+      "weekly",
+      "monthly",
+      "quarterly",
+      "annual"
+    ],
+    "status": [
+      "green",
+      "amber",
+      "red",
+      "no_data"
+    ],
+    "target_mode": [
+      "fixed",
+      "per_brand",
+      "brand_specific",
+      "product_specific",
+      "trend",
+      "expression",
+      "vs_plan",
+      "recalculate"
+    ],
+    "framework_pillar": [
+      "martell",
+      "squibb",
+      null
+    ],
+    "product_line": [
+      "professional_services",
+      "fnd"
+    ],
+    "team": [
+      "marketing",
+      "sdr",
+      "dealmaker"
+    ],
+    "severity": [
+      "critical",
+      "warning"
+    ]
+  },
+  "reading_schema": {
+    "description": "Definitions are static; readings are time-series. Store separately. Funnel readings carry a product_id; all others carry a brand_id.",
+    "example_brand": {
+      "metric_id": "fin.runway",
+      "brand_id": "fluxflow",
+      "period": "2026-08",
+      "value": 9.2,
+      "target": 12,
+      "status": "amber",
+      "vs_prior": -1.1,
+      "captured_at": "2026-09-01T02:00:00+02:00",
+      "captured_by": "hermes.cron.books",
+      "note": null
+    },
+    "example_funnel": {
+      "metric_id": "funnel.conv_lead_to_opp",
+      "product_id": "papa_pasta",
+      "team": "sdr",
+      "period": "2026-08",
+      "value": 0.18,
+      "target": 0.25,
+      "status": "red",
+      "vs_prior": -0.04,
+      "captured_at": "2026-09-01T02:00:00+02:00",
+      "captured_by": "manual.funnel_tracker",
+      "note": null
+    }
+  },
+  "counts": {
+    "metrics_total": 59,
+    "by_department": {
+      "fin": 10,
+      "founder": 6,
+      "hr": 7,
+      "impact": 3,
+      "it": 7,
+      "mkt": 8,
+      "ops": 6,
+      "sal": 12
+    },
+    "funnel_metrics_nested_in": "mkt and sal — funnel.* metrics carry funnel_stage and team fields",
+    "layer_1_slots": 12,
+    "reduction_from_cerebro_v1": "101 → 59, achieved by defining metrics once in a library and referencing them per brand rather than duplicating"
+  }
+}
