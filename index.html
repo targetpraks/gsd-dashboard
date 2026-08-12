@@ -399,7 +399,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260812-5"></script>
+<script src="js/data.js?v=20260812-6"></script>
 <script>
 'use strict';
 
@@ -464,16 +464,17 @@ function formulaHtml(m) {
     </div>`;
 }
 
-function readingsFor(metricId, brandId, productId, period) {
+function readingsFor(metricId, brandId, productId, period, origin) {
   return GSD_READINGS.filter(r =>
     r.metric_id === metricId &&
     (brandId ? r.brand_id === brandId : true) &&
     (productId ? r.product_id === productId : true) &&
+    (origin ? r.origin === origin : true) &&
     r.period === period
   );
 }
-function latestReading(metricId, brandId, productId) {
-  const rs = readingsFor(metricId, brandId, productId, state.period);
+function latestReading(metricId, brandId, productId, origin) {
+  const rs = readingsFor(metricId, brandId, productId, state.period, origin);
   return rs.length ? rs[0] : null;
 }
 function seriesFor(metricId, brandId, productId) {
@@ -702,29 +703,33 @@ function renderFunnel() {
   const stageHtml = stages.map(s => {
     const outMetric = s.stage === 1 ? 'funnel.leads' : s.stage === 2 ? 'funnel.opportunities' : (line === 'fnd' ? 'funnel.output_locations' : 'funnel.output_zar');
     const outM = metricById(outMetric);
-    const r = latestReading(outMetric, null, p.id);
+    const rIn = latestReading(outMetric, null, p.id, 'inbound');
+    const rOut = latestReading(outMetric, null, p.id, 'outbound');
     const convM = s.conversion_out ? metricById(s.conversion_out) : null;
-    const convR = s.conversion_out ? latestReading(s.conversion_out, null, p.id) : null;
+    const convRIn = s.conversion_out ? latestReading(s.conversion_out, null, p.id, 'inbound') : null;
+    const convROut = s.conversion_out ? latestReading(s.conversion_out, null, p.id, 'outbound') : null;
     const outUnit = outM.unit === 'franchise_locations' ? 'loc' : outM.unit === 'ZAR' ? 'R' : '';
-    const outVal = outM.unit === 'ZAR' ? fmt(r ? r.value : null, 'ZAR').replace('R', '') : fmt(r ? r.value : null, outM.unit);
+    const outValIn = outM.unit === 'ZAR' ? fmt(rIn ? rIn.value : null, 'ZAR').replace('R', '') : fmt(rIn ? rIn.value : null, outM.unit);
+    const outValOut = outM.unit === 'ZAR' ? fmt(rOut ? rOut.value : null, 'ZAR').replace('R', '') : fmt(rOut ? rOut.value : null, outM.unit);
     const convUnit = convM ? (convM.unit === 'percent' ? '%' : '') : '';
-    const convVal = convR ? (convM.unit === 'percent' ? convR.value.toFixed(0) : fmt(convR.value, convM.unit)) : '';
+    const convValIn = convRIn ? (convM.unit === 'percent' ? convRIn.value.toFixed(0) : fmt(convRIn.value, convM.unit)) : '';
+    const convValOut = convROut ? (convM.unit === 'percent' ? convROut.value.toFixed(0) : fmt(convROut.value, convM.unit)) : '';
     return `
       <div class="funnel-stage card">
         <span class="stage-num">STAGE ${s.stage} · ${s.team.toUpperCase()}</span>
         <div style="margin-top:14px;">
           <div class="funnel-metric">
             <div class="fm-label">${outM.name}</div>
-            <div class="fm-value">${outVal}${outUnit ? `<span class="fm-unit"> ${outUnit}</span>` : ''}</div>
+            <div class="fm-value">${outValIn}${outUnit ? `<span class="fm-unit"> ${outUnit}</span>` : ''}</div>
             <div class="fm-formula">${outM.formula || ''}</div>
-            <div class="fm-status">${pill(r ? r.status : 'no_data')}</div>
+            <div class="fm-status">${pill(rIn ? rIn.status : 'no_data')}</div>
           </div>
-          ${convM && convR ? `
+          ${convM && convRIn ? `
           <div class="funnel-metric conv">
             <div class="fm-label">${convM.name}</div>
-            <div class="fm-value">${convVal}${convUnit ? `<span class="fm-unit"> ${convUnit}</span>` : ''}</div>
+            <div class="fm-value">${convValIn}${convUnit ? `<span class="fm-unit"> ${convUnit}</span>` : ''}</div>
             <div class="fm-formula">${convM.formula || ''}</div>
-            <div class="fm-status">${pill(convR.status)}</div>
+            <div class="fm-status">${pill(convRIn.status)}</div>
           </div>` : ''}
         </div>
       </div>`;
@@ -732,18 +737,31 @@ function renderFunnel() {
 
   const arrows = ['<div class="funnel-arrow">➜</div>', '<div class="funnel-arrow">➜</div>'];
 
-  // 6-month trend table for this product
+  // 6-month trend table for this product — split by origin
   const trendMetrics = ['funnel.leads', 'funnel.conv_lead_to_opp', 'funnel.opportunities', 'funnel.conv_opp_to_close', line === 'fnd' ? 'funnel.output_locations' : 'funnel.output_zar'];
   const trendRows = GSD_MONTHS.map(period => {
     const cells = trendMetrics.map(mid => {
       const m = metricById(mid);
-      const r = GSD_READINGS.find(x => x.metric_id === mid && x.product_id === p.id && x.period === period);
-      return `<td class="mono">${r ? fmt(r.value, m.unit) : '—'}</td>`;
+      const rIn = GSD_READINGS.find(x => x.metric_id === mid && x.product_id === p.id && x.period === period && x.origin === 'inbound');
+      const rOut = GSD_READINGS.find(x => x.metric_id === mid && x.product_id === p.id && x.period === period && x.origin === 'outbound');
+      const inV = rIn ? fmt(rIn.value, m.unit) : '—';
+      const outV = rOut ? fmt(rOut.value, m.unit) : '—';
+      return `<td class="mono"><span style="color:var(--accent);">${inV}</span> / <span style="color:var(--muted);">${outV}</span></td>`;
     }).join('');
     return `<tr><td class="mono" style="color:var(--muted);">${period}</td>${cells}</tr>`;
   }).join('');
 
-  const trendHeaders = trendMetrics.map(mid => `<th>${metricById(mid).name}</th>`).join('');
+  const trendHeaders = trendMetrics.map(mid => `<th>${metricById(mid).name}<br><small style="font-weight:400; color:var(--muted);">IN / OUT</small></th>`).join('');
+
+  // Inbound vs Outbound split summary for the current month
+  const leadsM = metricById('funnel.leads');
+  const leadsIn = latestReading('funnel.leads', null, p.id, 'inbound');
+  const leadsOut = latestReading('funnel.leads', null, p.id, 'outbound');
+  const leadsInV = leadsIn ? leadsIn.value : 0;
+  const leadsOutV = leadsOut ? leadsOut.value : 0;
+  const leadsTotal = leadsInV + leadsOutV;
+  const inPct = leadsTotal > 0 ? Math.round((leadsInV / leadsTotal) * 100) : 0;
+  const outPct = leadsTotal > 0 ? 100 - inPct : 0;
 
   $('#funnel-view').innerHTML = `
     <div class="card" style="margin-bottom:14px;">
@@ -753,8 +771,24 @@ function renderFunnel() {
       </div>
       <div class="funnel-row">${stageHtml[0]}${arrows[0]}${stageHtml[1]}${arrows[1]}${stageHtml[2]}</div>
     </div>
+    <div class="card" style="margin-bottom:14px;">
+      <h3>Lead Origin Split — ${p.name} · ${state.period}</h3>
+      <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:center;">
+        <div style="flex:1; min-width:200px;">
+          <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-bottom:6px;">
+            <span style="color:var(--accent);">INBOUND ${leadsInV} (${inPct}%)</span>
+            <span style="color:var(--muted);">OUTBOUND ${leadsOutV} (${outPct}%)</span>
+          </div>
+          <div style="display:flex; height:14px; border-radius:7px; overflow:hidden; border:1px solid var(--border);">
+            <div style="width:${inPct}%; background:var(--accent);"></div>
+            <div style="width:${outPct}%; background:var(--muted);"></div>
+          </div>
+          <div style="margin-top:6px; font-size:11px; color:var(--muted);">Total leads: ${leadsTotal} · Inbound = marketing-generated · Outbound = SDR-generated</div>
+        </div>
+      </div>
+    </div>
     <div class="card">
-      <h3>6-Month Trend — ${p.name}</h3>
+      <h3>6-Month Trend — ${p.name} <small style="font-weight:400; color:var(--muted);">(IN / OUT)</small></h3>
       <div style="overflow-x:auto;">
         <table class="table">
           <thead><tr><th>Period</th>${trendHeaders}</tr></thead>

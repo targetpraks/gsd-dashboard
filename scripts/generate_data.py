@@ -252,7 +252,7 @@ for m in C["metrics"]:
     mid = m["id"]
     is_funnel = mid.startswith("funnel.")
     if is_funnel:
-        # per product
+        # per product, split by origin (INBOUND / OUTBOUND) per the Funnel Tracker
         for p in products:
             pid = p["id"]
             line = p["line"]
@@ -261,21 +261,25 @@ for m in C["metrics"]:
                 continue
             if mid == "funnel.output_locations" and line != "fnd":
                 continue
-            series = []
-            for i, period in enumerate(MONTHS):
-                val = gen_value(m, pid, i)
-                tgt = target_for(m, pid)
-                st = status_for(val, tgt, m.get("thresholds"), m.get("direction", "higher_is_better"))
-                series.append({"period": period, "value": val, "target": tgt, "status": st})
-            for i, period in enumerate(MONTHS):
-                vs = None
-                if i > 0:
-                    vs = round(series[i]["value"] - series[i-1]["value"], 1)
-                readings.append({
-                    "metric_id": mid, "product_id": pid, "period": period,
-                    "value": series[i]["value"], "target": series[i]["target"],
-                    "status": series[i]["status"], "vs_prior": vs
-                })
+            for origin in ["inbound", "outbound"]:
+                series = []
+                for i, period in enumerate(MONTHS):
+                    val = gen_value(m, pid, i)
+                    # outbound is typically smaller than inbound for most products
+                    if origin == "outbound":
+                        val = int(val * random.uniform(0.2, 0.6))
+                    tgt = target_for(m, pid)
+                    st = status_for(val, tgt, m.get("thresholds"), m.get("direction", "higher_is_better"))
+                    series.append({"period": period, "value": val, "target": tgt, "status": st})
+                for i, period in enumerate(MONTHS):
+                    vs = None
+                    if i > 0:
+                        vs = round(series[i]["value"] - series[i-1]["value"], 1)
+                    readings.append({
+                        "metric_id": mid, "product_id": pid, "origin": origin, "period": period,
+                        "value": series[i]["value"], "target": series[i]["target"],
+                        "status": series[i]["status"], "vs_prior": vs
+                    })
     else:
         # per brand (all brands, but respect focus where sensible — generate for all)
         for bid in brands:
