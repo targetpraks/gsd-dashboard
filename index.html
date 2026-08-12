@@ -315,7 +315,8 @@
 
   <!-- ============ CEO TWELVE ============ -->
   <div class="view active" id="view-ceo">
-    <div class="section-title"><span class="bar"></span> CEO Twelve <small>— Layer 1 · Ricardo's only screen · 20 minutes, Monday morning</small></div>
+    <div class="section-title"><span class="bar"></span> CEO Twelve <small>— Layer 1 · per brand · 20 minutes, Monday morning</small></div>
+    <div class="brand-tabs" id="ceo-brand-tabs"></div>
     <div class="legend">
       <span><span class="dot green"></span> Green ≥ 100% target</span>
       <span><span class="dot amber"></span> Amber 90–99%</span>
@@ -425,6 +426,7 @@ const deltaHtml = (vs, direction) => {
 let state = {
   view: 'ceo',
   brand: 'infinity',
+  ceoBrand: 'infinity',
   funnelProduct: 'infx_solutions',
   dept: 'fin',
   period: GSD_CURRENT,
@@ -486,18 +488,30 @@ $('#period-next').addEventListener('click', () => {
   if (i < GSD_MONTHS.length - 1) { state.period = GSD_MONTHS[i + 1]; render(); }
 });
 
-/* ================= CEO Twelve ================= */
+/* ================= CEO Twelve (per brand) ================= */
+function renderCeoTabs() {
+  const html = Object.values(GSD_BRANDS).map(b => `
+    <button class="brand-tab ${state.ceoBrand === b.id ? 'active' : ''}" data-ceo-brand="${b.id}">
+      ${b.name} <span class="prio">P${b.priority}</span>
+    </button>`).join('');
+  $('#ceo-brand-tabs').innerHTML = html;
+  $$('#ceo-brand-tabs .brand-tab').forEach(t => t.addEventListener('click', () => {
+    state.ceoBrand = t.dataset.ceoBrand;
+    renderCeoTabs();
+    renderCeo();
+  }));
+}
+
 function renderCeo() {
+  const b = brandById(state.ceoBrand);
   const blocks = CEREBRO.ceo_twelve.blocks;
   const html = Object.entries(blocks).map(([blockName, metricIds]) => {
     const rows = metricIds.map(mid => {
       const m = metricById(mid);
-      const r = latestReading(mid, state.brand === 'infinity' ? null : state.brand);
-      // CEO view: roll up across brands — take the first reading (infinity) or aggregate
-      const agg = aggregateReading(mid);
-      const val = agg ? agg.value : null;
-      const tgt = agg ? agg.target : null;
-      const st = agg ? agg.status : 'no_data';
+      const r = latestReading(mid, b.id);
+      const val = r ? r.value : null;
+      const tgt = r ? r.target : null;
+      const st = r ? r.status : 'no_data';
       const pct = pctOf(val, tgt);
       const width = pct !== null ? Math.min(100, Math.max(0, pct)) : 0;
       return `
@@ -506,38 +520,27 @@ function renderCeo() {
             <span class="label">${m.name}</span>
             <span>
               <span class="value">${fmt(val, m.unit)}</span>
-              ${deltaHtml(agg ? agg.vs_prior : null, m.direction)}
+              ${deltaHtml(r ? r.vs_prior : null, m.direction)}
               ${pill(st)}
             </span>
           </div>
           <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(st)};"></div></div>
-          <div class="sub" style="font-size:10px; color:var(--muted);">${m.id} · ${deptById(m.department) ? deptById(m.department).name : m.department} · ${m.cadence}</div>
-          ${formulaHtml(m)}
+          <div class="sub" style="font-size:10px; color:var(--muted);">${m.id} · ${m.cadence}</div>
         </div>`;
     }).join('');
     return `
       <div class="section-title"><span class="bar"></span> ${blockName}</div>
       <div class="card" style="margin-bottom:14px;">${rows}</div>`;
   }).join('');
-  $('#ceo-blocks').innerHTML = html;
-}
-
-function aggregateReading(mid) {
-  // For CEO view: average across brands that have readings for this metric
-  const rs = GSD_READINGS.filter(r => r.metric_id === mid && r.period === state.period && r.brand_id);
-  if (!rs.length) return null;
-  const numeric = rs.filter(r => typeof r.value === 'number');
-  if (!numeric.length) return null;
-  const avg = numeric.reduce((s, r) => s + r.value, 0) / numeric.length;
-  const tgt = numeric[0].target;
-  const st = numeric[0].status;
-  const prev = GSD_READINGS.filter(r => r.metric_id === mid && r.period === prevPeriod() && r.brand_id);
-  const prevAvg = prev.length ? prev.reduce((s, r) => s + (typeof r.value === 'number' ? r.value : 0), 0) / prev.length : null;
-  return { value: Math.round(avg * 10) / 10, target: tgt, status: st, vs_prior: prevAvg !== null ? Math.round((avg - prevAvg) * 10) / 10 : null };
-}
-function prevPeriod() {
-  const i = GSD_MONTHS.indexOf(state.period);
-  return i > 0 ? GSD_MONTHS[i - 1] : null;
+  $('#ceo-blocks').innerHTML = `
+    <div class="card" style="margin-bottom:14px; border-color:var(--border-strong);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <h3 style="margin:0; color:var(--text);">${b.name} — CEO Twelve</h3>
+        <span class="pill ${b.status === 'active' ? 'green' : 'amber'}">${b.status.toUpperCase()}</span>
+      </div>
+      <div style="margin-top:6px; font-size:12px; color:var(--muted);">${b.role} · Priority ${b.priority}</div>
+    </div>
+    ${html}`;
 }
 
 /* ================= Brand Boards ================= */
@@ -581,11 +584,48 @@ function renderBrandBoard() {
     deptGroups[m.department].push({ m, r });
   });
 
+  // Finance: combine Revenue + Gross Margin into one row, add EBITDA
+  if (deptGroups['fin']) {
+    const finItems = deptGroups['fin'];
+    const rev = finItems.find(x => x.m.id === 'fin.revenue');
+    const gm = finItems.find(x => x.m.id === 'fin.gross_margin');
+    const ebitda = finItems.find(x => x.m.id === 'fin.ebitda');
+    const combined = [];
+    if (rev && gm) {
+      combined.push({
+        m: { ...rev.m, name: 'Revenue + Gross Margin', id: 'fin.rev_gm', formula: 'revenue · (revenue - cogs) / revenue' },
+        r: { ...rev.r, value: rev.r.value, target: rev.r.target, status: rev.r.status, vs_prior: rev.r.vs_prior },
+        gm: gm.r
+      });
+    }
+    if (ebitda) combined.push(ebitda);
+    // keep the rest of finance (runway, burn, dso, etc.) but drop the split revenue/gm rows
+    const rest = finItems.filter(x => x.m.id !== 'fin.revenue' && x.m.id !== 'fin.gross_margin' && x.m.id !== 'fin.ebitda');
+    deptGroups['fin'] = [...combined, ...rest];
+  }
+
   const cards = Object.entries(deptGroups).map(([deptId, items]) => {
     const d = deptById(deptId);
-    const rows = items.map(({ m, r }) => {
+    const rows = items.map(({ m, r, gm }) => {
       const pct = pctOf(r.value, r.target);
       const width = pct !== null ? Math.min(100, Math.max(0, pct)) : 0;
+      // Combined Revenue + GM row: show both values
+      if (m.id === 'fin.rev_gm' && gm) {
+        return `
+        <div class="metric">
+          <div class="top">
+            <span class="label">${m.name}</span>
+            <span>
+              <span class="value" style="font-size:15px;">${fmt(r.value, m.unit)}</span>
+              <span class="value" style="font-size:15px; color:var(--accent2);">${fmt(gm.value, gm.m ? gm.m.unit : 'percent')}</span>
+              ${deltaHtml(r.vs_prior, m.direction)}
+              ${pill(r.status)}
+            </span>
+          </div>
+          <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(r.status)};"></div></div>
+          <div class="sub" style="font-size:10px; color:var(--muted);">${m.formula}</div>
+        </div>`;
+      }
       return `
         <div class="metric">
           <div class="top">
@@ -597,7 +637,7 @@ function renderBrandBoard() {
             </span>
           </div>
           <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(r.status)};"></div></div>
-          ${formulaHtml(m)}
+          <div class="sub" style="font-size:10px; color:var(--muted);">${m.formula || ''}</div>
         </div>`;
     }).join('');
     return `<div class="card"><h3>${d ? d.name : deptId}</h3>${rows}</div>`;
@@ -642,8 +682,7 @@ function renderFunnel() {
               <span class="label">${outM.name}</span>
               <span><span class="value">${fmt(r ? r.value : null, outM.unit)}</span> ${pill(r ? r.status : 'no_data')}</span>
             </div>
-            <div class="sub">${s.accountable_for}</div>
-            ${formulaHtml(outM)}
+            <div class="sub" style="font-size:10px; color:var(--muted);">${outM.formula || ''}</div>
           </div>
           ${convM && convR ? `
           <div class="metric">
@@ -651,8 +690,7 @@ function renderFunnel() {
               <span class="label">${convM.name}</span>
               <span><span class="value">${fmt(convR.value, convM.unit)}</span> ${pill(convR.status)}</span>
             </div>
-            <div class="sub">${convM.definition}</div>
-            ${formulaHtml(convM)}
+            <div class="sub" style="font-size:10px; color:var(--muted);">${convM.formula || ''}</div>
           </div>` : ''}
         </div>
       </div>`;
@@ -715,19 +753,37 @@ function renderDept() {
       if (!r) return `<td class="mono" style="color:var(--muted);">—</td>`;
       return `<td class="mono">${fmt(r.value, m.unit)} ${pill(r.status)}</td>`;
     }).join('');
-    const plain = (typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || m.definition || '';
-    return `<tr><td style="font-weight:600;">${m.name}</td><td class="mono" style="color:var(--muted);">${m.id}</td><td style="color:var(--muted); font-size:12px; max-width:260px;">${plain}</td>${cells}</tr>`;
+    const f = m.formula || '';
+    return `<tr><td style="font-weight:600;">${m.name}</td><td class="mono" style="color:var(--muted);">${m.id}</td><td class="mono" style="color:var(--accent2); font-size:11px;">${f}</td>${cells}</tr>`;
   }).join('');
   const headers = Object.values(GSD_BRANDS).map(b => `<th>${b.name}</th>`).join('');
+
+  // Departmental costing: EBITDA per department across brands
+  const ebitdaRows = Object.values(GSD_BRANDS).map(b => {
+    const r = latestReading('fin.ebitda_dept', b.id);
+    if (!r) return `<td class="mono" style="color:var(--muted);">—</td>`;
+    return `<td class="mono">${fmt(r.value, r.unit || 'ZAR')} ${pill(r.status)}</td>`;
+  }).join('');
+
   $('#dept-view').innerHTML = `
-    <div class="card">
+    <div class="card" style="margin-bottom:14px;">
       <h3>${d.name} — North Star: ${d.north_star}</h3>
       <div style="overflow-x:auto;">
         <table class="table">
-          <thead><tr><th>Metric</th><th>ID</th><th>How it's calculated</th>${headers}</tr></thead>
+          <thead><tr><th>Metric</th><th>ID</th><th>Formula</th>${headers}</tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
+    </div>
+    <div class="card">
+      <h3>Departmental Costing — EBITDA per Department</h3>
+      <div style="overflow-x:auto;">
+        <table class="table">
+          <thead><tr><th>Department</th>${headers}</tr></thead>
+          <tbody><tr><td style="font-weight:600;">${d.name}</td>${ebitdaRows}</tr></tbody>
+        </table>
+      </div>
+      <div class="sub" style="font-size:10px; color:var(--muted); margin-top:6px;">EBITDA = dept_revenue - dept_cogs - dept_opex</div>
     </div>`;
 }
 
@@ -741,7 +797,7 @@ function renderLibrary() {
   });
   const rows = list.map(m => {
     const d = deptById(m.department);
-    const plain = (typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || m.definition || '';
+    const f = m.formula || '';
     return `
       <tr>
         <td class="mono" style="color:var(--accent2);">${m.id}</td>
@@ -754,13 +810,13 @@ function renderLibrary() {
         <td>${m.owner}</td>
         <td>${m.framework_pillar ? (m.framework_pillar === 'martell' ? 'Martell' : 'Squibb') : '—'}</td>
         <td>${m.impact_metric ? '<span class="pill green">IMPACT</span>' : '—'}</td>
-        <td style="color:var(--muted); font-size:12px; max-width:280px;">${plain}</td>
+        <td class="mono" style="color:var(--accent2); font-size:11px;">${f}</td>
       </tr>`;
   }).join('');
   $('#library-table').innerHTML = `
     <div style="overflow-x:auto;">
       <table class="table">
-        <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Type</th><th>Unit</th><th>Cadence</th><th>Source</th><th>Owner</th><th>Pillar</th><th>Impact</th><th>How it's calculated</th></tr></thead>
+        <thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Type</th><th>Unit</th><th>Cadence</th><th>Source</th><th>Owner</th><th>Pillar</th><th>Impact</th><th>Formula</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
@@ -889,7 +945,7 @@ function render() {
   $('#sim-badge').textContent = GSD_SIMULATED ? 'SIMULATED DATA — WIRE ZOHO VIA FLUXFLOW' : 'LIVE DATA';
 
   switch (state.view) {
-    case 'ceo': renderCeo(); break;
+    case 'ceo': renderCeoTabs(); renderCeo(); break;
     case 'brands': renderBrandTabs(); renderBrandBoard(); break;
     case 'funnel': renderFunnelTabs(); renderFunnel(); break;
     case 'depts': renderDeptTabs(); renderDept(); break;

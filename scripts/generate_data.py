@@ -137,6 +137,47 @@ def target_for(metric, brand_id):
 
 # ---- Build metric map ----
 metrics = {m["id"]: m for m in C["metrics"]}
+# EBITDA metrics (departmental costing) — not in the contract yet
+metrics["fin.ebitda"] = {
+    "id": "fin.ebitda",
+    "name": "EBITDA (basic)",
+    "department": "fin",
+    "layer": 2,
+    "definition": "Earnings before interest, taxes, depreciation and amortisation. Revenue minus COGS minus operating expenditure.",
+    "formula": "revenue - cogs - opex",
+    "type": "lagging",
+    "unit": "ZAR",
+    "direction": "higher_is_better",
+    "target": {"mode": "per_brand", "values": {b["id"]: 0 for b in C["taxonomy"]["brands"]}},
+    "thresholds": {"green": None, "amber": None, "red": None},
+    "cadence": "monthly",
+    "source": "zoho_books",
+    "owner": "TBC",
+    "framework_pillar": None,
+    "impact_metric": False,
+    "active": True,
+    "note": "Basic EBITDA for departmental costing."
+}
+metrics["fin.ebitda_dept"] = {
+    "id": "fin.ebitda_dept",
+    "name": "EBITDA (department)",
+    "department": "fin",
+    "layer": 3,
+    "definition": "Department-level EBITDA contribution for departmental costing.",
+    "formula": "dept_revenue - dept_cogs - dept_opex",
+    "type": "lagging",
+    "unit": "ZAR",
+    "direction": "higher_is_better",
+    "target": {"mode": "per_brand", "values": {b["id"]: 0 for b in C["taxonomy"]["brands"]}},
+    "thresholds": {"green": None, "amber": None, "red": None},
+    "cadence": "monthly",
+    "source": "zoho_books",
+    "owner": "TBC",
+    "framework_pillar": None,
+    "impact_metric": False,
+    "active": True,
+    "note": "Departmental costing — EBITDA per department."
+}
 brands = {b["id"]: b for b in C["taxonomy"]["brands"]}
 products = C["taxonomy"]["products"]["items"]
 depts = {d["id"]: d for d in C["taxonomy"]["departments"]}
@@ -190,6 +231,43 @@ for m in C["metrics"]:
                     "value": series[i]["value"], "target": series[i]["target"],
                     "status": series[i]["status"], "vs_prior": vs
                 })
+
+# ---- EBITDA readings (brand-level) ----
+for bid in brands:
+    series = []
+    for i, period in enumerate(MONTHS):
+        val = random.uniform(-200000, 800000)
+        val = int(round(val / 1000) * 1000)
+        series.append({"period": period, "value": val})
+    for i, period in enumerate(MONTHS):
+        vs = None
+        if i > 0:
+            vs = round(series[i]["value"] - series[i-1]["value"], 1)
+        readings.append({
+            "metric_id": "fin.ebitda", "brand_id": bid, "period": period,
+            "value": series[i]["value"], "target": 0,
+            "status": "green" if series[i]["value"] >= 0 else "red",
+            "vs_prior": vs
+        })
+
+# ---- Department-level EBITDA (departmental costing) ----
+for bid in brands:
+    for did in depts:
+        series = []
+        for i, period in enumerate(MONTHS):
+            val = random.uniform(-150000, 500000)
+            val = int(round(val / 1000) * 1000)
+            series.append({"period": period, "value": val})
+        for i, period in enumerate(MONTHS):
+            vs = None
+            if i > 0:
+                vs = round(series[i]["value"] - series[i-1]["value"], 1)
+            readings.append({
+                "metric_id": "fin.ebitda_dept", "brand_id": bid, "dept_id": did, "period": period,
+                "value": series[i]["value"], "target": 0,
+                "status": "green" if series[i]["value"] >= 0 else "red",
+                "vs_prior": vs
+            })
 
 # ---- Plain-language formula explanations (shown on the dashboard) ----
 FORMULA_EXPLANATIONS = {
@@ -252,6 +330,8 @@ FORMULA_EXPLANATIONS = {
     "funnel.conv_opp_to_close": "Closed business divided by opportunities. The Dealmaker team's conversion rate.",
     "funnel.output_zar": "Sum of closed business value. Professional services only.",
     "funnel.output_locations": "Count of franchise locations sold. FND only — never expressed in Rand at funnel level.",
+    "fin.ebitda": "Revenue minus COGS minus operating expenditure. Basic EBITDA.",
+    "fin.ebitda_dept": "Department-level EBITDA contribution for departmental costing.",
 }
 
 # ---- Emit data.js ----
