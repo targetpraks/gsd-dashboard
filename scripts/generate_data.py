@@ -178,6 +178,46 @@ metrics["fin.ebitda_dept"] = {
     "active": True,
     "note": "Departmental costing — EBITDA per department."
 }
+metrics["fin.revenue_dept"] = {
+    "id": "fin.revenue_dept",
+    "name": "Department Revenue",
+    "department": "fin",
+    "layer": 3,
+    "definition": "Revenue attributed to this department.",
+    "formula": "sum(dept_revenue)",
+    "type": "lagging",
+    "unit": "ZAR",
+    "direction": "higher_is_better",
+    "target": {"mode": "per_brand", "values": {b["id"]: 0 for b in C["taxonomy"]["brands"]}},
+    "thresholds": {"green": None, "amber": None, "red": None},
+    "cadence": "monthly",
+    "source": "zoho_books",
+    "owner": "TBC",
+    "framework_pillar": None,
+    "impact_metric": False,
+    "active": True,
+    "note": "Departmental costing — revenue per department."
+}
+metrics["fin.gross_margin_dept"] = {
+    "id": "fin.gross_margin_dept",
+    "name": "Department Gross Margin",
+    "department": "fin",
+    "layer": 3,
+    "definition": "Gross margin percentage for this department.",
+    "formula": "(dept_revenue - dept_cogs) / dept_revenue",
+    "type": "lagging",
+    "unit": "percent",
+    "direction": "higher_is_better",
+    "target": {"mode": "per_brand", "values": {b["id"]: 0 for b in C["taxonomy"]["brands"]}},
+    "thresholds": {"green": None, "amber": None, "red": None},
+    "cadence": "monthly",
+    "source": "zoho_books",
+    "owner": "TBC",
+    "framework_pillar": None,
+    "impact_metric": False,
+    "active": True,
+    "note": "Departmental costing — gross margin per department."
+}
 brands = {b["id"]: b for b in C["taxonomy"]["brands"]}
 products = C["taxonomy"]["products"]["items"]
 
@@ -273,22 +313,53 @@ for bid in brands:
             "vs_prior": vs
         })
 
-# ---- Department-level EBITDA (departmental costing) ----
+# ---- Department-level Revenue, Gross Margin, EBITDA (departmental costing) ----
+# Every department gets the SAME three financial metrics: Revenue, Gross Margin, EBITDA
 for bid in brands:
     for did in depts:
-        series = []
+        # Department Revenue (positive)
+        rev_series = []
+        for i, period in enumerate(MONTHS):
+            val = random.uniform(100000, 900000)
+            val = int(round(val / 1000) * 1000)
+            rev_series.append({"period": period, "value": val})
+        # Department Gross Margin (percent)
+        gm_series = []
+        for i, period in enumerate(MONTHS):
+            val = random.uniform(25, 75)
+            gm_series.append({"period": period, "value": round(val, 1)})
+        # Department EBITDA (can be negative)
+        ebitda_series = []
         for i, period in enumerate(MONTHS):
             val = random.uniform(-150000, 500000)
             val = int(round(val / 1000) * 1000)
-            series.append({"period": period, "value": val})
+            ebitda_series.append({"period": period, "value": val})
         for i, period in enumerate(MONTHS):
             vs = None
             if i > 0:
-                vs = round(series[i]["value"] - series[i-1]["value"], 1)
+                vs = round(rev_series[i]["value"] - rev_series[i-1]["value"], 1)
+            readings.append({
+                "metric_id": "fin.revenue_dept", "brand_id": bid, "dept_id": did, "period": period,
+                "value": rev_series[i]["value"], "target": 0,
+                "status": "green" if rev_series[i]["value"] >= 0 else "red",
+                "vs_prior": vs
+            })
+            vs = None
+            if i > 0:
+                vs = round(gm_series[i]["value"] - gm_series[i-1]["value"], 1)
+            readings.append({
+                "metric_id": "fin.gross_margin_dept", "brand_id": bid, "dept_id": did, "period": period,
+                "value": gm_series[i]["value"], "target": 0,
+                "status": "green" if gm_series[i]["value"] >= 0 else "red",
+                "vs_prior": vs
+            })
+            vs = None
+            if i > 0:
+                vs = round(ebitda_series[i]["value"] - ebitda_series[i-1]["value"], 1)
             readings.append({
                 "metric_id": "fin.ebitda_dept", "brand_id": bid, "dept_id": did, "period": period,
-                "value": series[i]["value"], "target": 0,
-                "status": "green" if series[i]["value"] >= 0 else "red",
+                "value": ebitda_series[i]["value"], "target": 0,
+                "status": "green" if ebitda_series[i]["value"] >= 0 else "red",
                 "vs_prior": vs
             })
 
@@ -355,6 +426,8 @@ FORMULA_EXPLANATIONS = {
     "funnel.output_locations": "Franchise locations sold.",
     "fin.ebitda": "Profit before interest, tax, depreciation.",
     "fin.ebitda_dept": "Profit per department.",
+    "fin.revenue_dept": "Money earned by this department.",
+    "fin.gross_margin_dept": "Department profit after product costs.",
 }
 
 # ---- Emit data.js ----

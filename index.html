@@ -399,7 +399,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260812-4"></script>
+<script src="js/data.js?v=20260812-5"></script>
 <script>
 'use strict';
 
@@ -602,6 +602,7 @@ function renderBrandBoard() {
     if (m.id.startsWith('funnel.')) return;
     if (m.department === 'founder') return;
     if (UNIVERSAL_KPIS.includes(m.id)) return; // already in the KPI strip
+    if (['fin.revenue_dept', 'fin.gross_margin_dept', 'fin.ebitda_dept'].includes(m.id)) return; // department costing lives in Departments view
     const r = latestReading(m.id, b.id);
     if (!r) return;
     // ops splits by brand: ACDC → BU 7 ZOR BO 1; TLF + Papa Pasta → BU 8 ZOR BO 2
@@ -784,6 +785,10 @@ function renderDept() {
   const metrics = Object.values(GSD_METRICS).filter(m => {
     if (m.id.startsWith('funnel.')) return false;
     if (m.department === 'founder') return false;
+    if (['fin.revenue_dept', 'fin.gross_margin_dept', 'fin.ebitda_dept'].includes(m.id)) return false; // shown in the costing card below
+    if (['fin.revenue', 'fin.gross_margin', 'fin.ebitda'].includes(m.id)) return false; // brand-level financials live in the KPI strip / costing card — no duplicates
+    // ops metrics appear in BOTH BU 7 (ZOR BO 1) and BU 8 (ZOR BO 2)
+    if (m.department === 'ops') return state.dept === 'ops1' || state.dept === 'ops2';
     return (BU_MAP[m.department] || m.department) === state.dept;
   });
   const rows = metrics.map(m => {
@@ -798,11 +803,20 @@ function renderDept() {
   }).join('');
   const headers = Object.values(GSD_BRANDS).map(b => `<th>${b.name}</th>`).join('');
 
-  // Departmental costing: EBITDA per department across brands
-  const ebitdaRows = Object.values(GSD_BRANDS).map(b => {
-    const r = latestReading('fin.ebitda_dept', b.id);
-    if (!r) return `<td class="mono" style="color:var(--muted);">—</td>`;
-    return `<td class="mono">${fmt(r.value, r.unit || 'ZAR')} ${pill(r.status)}</td>`;
+  // Departmental costing: Revenue, Gross Margin, EBITDA per department across brands
+  // SAME three metrics for every department — consistent, no duplicates
+  const deptFinMetrics = [
+    { id: 'fin.revenue_dept', name: 'Department Revenue', unit: 'ZAR' },
+    { id: 'fin.gross_margin_dept', name: 'Department Gross Margin', unit: 'percent' },
+    { id: 'fin.ebitda_dept', name: 'Department EBITDA', unit: 'ZAR' },
+  ];
+  const deptFinRows = deptFinMetrics.map(fm => {
+    const cells = Object.values(GSD_BRANDS).map(b => {
+      const r = latestReading(fm.id, b.id);
+      if (!r) return `<td class="mono" style="color:var(--muted);">—</td>`;
+      return `<td class="mono">${fmt(r.value, fm.unit)} ${pill(r.status)}</td>`;
+    }).join('');
+    return `<tr><td style="font-weight:600;">${fm.name}</td>${cells}</tr>`;
   }).join('');
 
   $('#dept-view').innerHTML = `
@@ -816,14 +830,14 @@ function renderDept() {
       </div>
     </div>
     <div class="card">
-      <h3>Departmental Costing — EBITDA per Department</h3>
+      <h3>Departmental Costing — ${d.full || d.name}</h3>
       <div style="overflow-x:auto;">
         <table class="table">
-          <thead><tr><th>Department</th>${headers}</tr></thead>
-          <tbody><tr><td style="font-weight:600;">${d.full || d.name}</td>${ebitdaRows}</tr></tbody>
+          <thead><tr><th>Metric</th>${headers}</tr></thead>
+          <tbody>${deptFinRows}</tbody>
         </table>
       </div>
-      <div class="sub" style="font-size:10px; color:var(--muted); margin-top:6px;">EBITDA = dept_revenue - dept_cogs - dept_opex</div>
+      <div class="sub" style="font-size:10px; color:var(--muted); margin-top:6px;">Same three financial metrics for every department: Revenue · Gross Margin · EBITDA</div>
     </div>`;
 }
 
