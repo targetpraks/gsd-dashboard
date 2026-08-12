@@ -558,8 +558,9 @@ function renderBrandTabs() {
 
 function renderBrandBoard() {
   const b = brandById(state.brand);
-  const focus = b.focus_metrics || [];
-  const focusReadings = focus.map(mid => {
+  // One universal KPI set for ALL brands — same ratings everywhere, comparable
+  const UNIVERSAL_KPIS = ['fin.revenue', 'fin.gross_margin', 'fin.ebitda', 'fin.runway', 'fin.net_burn', 'ops.quality_score'];
+  const focusReadings = UNIVERSAL_KPIS.map(mid => {
     const m = metricById(mid);
     const r = latestReading(mid, b.id);
     return { m, r };
@@ -573,12 +574,13 @@ function renderBrandBoard() {
       <div class="k-sub">${pill(r.status)} ${r.target !== null && r.target !== undefined ? '· target ' + fmt(r.target, m.unit) : ''}</div>
     </div>`).join('');
 
-  // Department cards — group all metrics for this brand by BU
+  // Department cards — group all metrics for this brand by BU, EXCLUDING the KPI strip metrics (no duplication)
   const BU_MAP = { fin: 'fin', hr: 'hr', impact: 'adm', it: 'it', mkt: 'mkt', sal: 'sal', ops: 'ops1' };
   const deptGroups = {};
   Object.values(GSD_METRICS).forEach(m => {
     if (m.id.startsWith('funnel.')) return;
     if (m.department === 'founder') return;
+    if (UNIVERSAL_KPIS.includes(m.id)) return; // already in the KPI strip
     const r = latestReading(m.id, b.id);
     if (!r) return;
     // ops splits by brand: ACDC → BU 7 ZOR BO 1; TLF + Papa Pasta → BU 8 ZOR BO 2
