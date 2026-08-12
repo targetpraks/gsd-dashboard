@@ -383,7 +383,7 @@
   </div>
 </div>
 
-<script src="js/data.js"></script>
+<script src="js/data.js?v=20260812-1"></script>
 <script>
 'use strict';
 
@@ -437,7 +437,7 @@ const deptById = (id) => GSD_DEPTS[id];
 
 /* Formula explanation: plain-language + the contract formula, shown under every metric */
 function formulaHtml(m) {
-  const plain = GSD_FORMULA_EXPLANATIONS[m.id] || m.definition || '';
+  const plain = (typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || m.definition || '';
   const f = m.formula || '';
   if (!plain && !f) return '';
   return `
@@ -715,7 +715,7 @@ function renderDept() {
       if (!r) return `<td class="mono" style="color:var(--muted);">—</td>`;
       return `<td class="mono">${fmt(r.value, m.unit)} ${pill(r.status)}</td>`;
     }).join('');
-    const plain = GSD_FORMULA_EXPLANATIONS[m.id] || m.definition || '';
+    const plain = (typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || m.definition || '';
     return `<tr><td style="font-weight:600;">${m.name}</td><td class="mono" style="color:var(--muted);">${m.id}</td><td style="color:var(--muted); font-size:12px; max-width:260px;">${plain}</td>${cells}</tr>`;
   }).join('');
   const headers = Object.values(GSD_BRANDS).map(b => `<th>${b.name}</th>`).join('');
@@ -741,7 +741,7 @@ function renderLibrary() {
   });
   const rows = list.map(m => {
     const d = deptById(m.department);
-    const plain = GSD_FORMULA_EXPLANATIONS[m.id] || m.definition || '';
+    const plain = (typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || m.definition || '';
     return `
       <tr>
         <td class="mono" style="color:var(--accent2);">${m.id}</td>
