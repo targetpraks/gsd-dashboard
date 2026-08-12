@@ -112,6 +112,8 @@ def gen_value(metric, brand_id, month_idx):
             val = random.uniform(150, 600)
         elif unit == "units_or_kg":
             val = random.uniform(80, 400)
+        elif unit == "nps":
+            val = random.uniform(-20, 70)
         else:
             val = random.uniform(1, 100)
 
@@ -218,6 +220,27 @@ metrics["fin.gross_margin_dept"] = {
     "active": True,
     "note": "Departmental costing — gross margin per department."
 }
+metrics["mkt.nps"] = {
+    "id": "mkt.nps",
+    "name": "Net Promoter Score",
+    "department": "mkt",
+    "layer": 1,
+    "block": "Growth",
+    "definition": "Promoters minus detractors. Would customers recommend us?",
+    "formula": "promoters_pct - detractors_pct",
+    "type": "lagging",
+    "unit": "nps",
+    "direction": "higher_is_better",
+    "target": {"mode": "fixed", "value": 50},
+    "thresholds": {"green": 50, "amber": 30, "red": 0},
+    "cadence": "monthly",
+    "source": "survey",
+    "owner": "TBC",
+    "framework_pillar": None,
+    "impact_metric": False,
+    "active": True,
+    "note": "Main reporting feature — customer advocacy."
+}
 brands = {b["id"]: b for b in C["taxonomy"]["brands"]}
 products = C["taxonomy"]["products"]["items"]
 
@@ -317,6 +340,23 @@ for bid in brands:
             "vs_prior": vs
         })
 
+# ---- NPS readings (brand-level) ----
+for bid in brands:
+    series = []
+    for i, period in enumerate(MONTHS):
+        val = random.uniform(-20, 70)
+        series.append({"period": period, "value": round(val, 1)})
+    for i, period in enumerate(MONTHS):
+        vs = None
+        if i > 0:
+            vs = round(series[i]["value"] - series[i-1]["value"], 1)
+        readings.append({
+            "metric_id": "mkt.nps", "brand_id": bid, "period": period,
+            "value": series[i]["value"], "target": 50,
+            "status": "green" if series[i]["value"] >= 50 else ("amber" if series[i]["value"] >= 30 else "red"),
+            "vs_prior": vs
+        })
+
 # ---- Department-level Revenue, Gross Margin, EBITDA (departmental costing) ----
 # Every department gets the SAME three financial metrics: Revenue, Gross Margin, EBITDA
 for bid in brands:
@@ -399,6 +439,7 @@ FORMULA_EXPLANATIONS = {
     "mkt.brand_reach": "People who see us.",
     "mkt.help_first_content": "Free value pieces published.",
     "mkt.community_size": "Community members.",
+    "mkt.nps": "Would customers recommend us?",
     "sal.pipeline": "Value of open deals.",
     "sal.pipeline_coverage": "Deals in the pipeline vs target.",
     "sal.deals_won": "Deals closed this month.",

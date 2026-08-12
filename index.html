@@ -399,7 +399,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260812-6"></script>
+<script src="js/data.js?v=20260812-7"></script>
 <script>
 'use strict';
 
@@ -523,6 +523,10 @@ function renderCeo() {
   const blocks = Object.fromEntries(
     Object.entries(CEREBRO.ceo_twelve.blocks).filter(([name]) => name !== 'Founder Freedom')
   );
+  // NPS is a main reporting feature — surface it in the Growth block
+  if (blocks['Growth']) {
+    blocks['Growth'] = [...blocks['Growth'], 'mkt.nps'];
+  }
   const html = Object.entries(blocks).map(([blockName, metricIds]) => {
     const rows = metricIds.map(mid => {
       const m = metricById(mid);
@@ -581,7 +585,7 @@ function renderBrandTabs() {
 function renderBrandBoard() {
   const b = brandById(state.brand);
   // One universal KPI set for ALL brands — same ratings everywhere, comparable
-  const UNIVERSAL_KPIS = ['fin.revenue', 'fin.gross_margin', 'fin.ebitda', 'fin.runway', 'fin.net_burn', 'ops.quality_score'];
+  const UNIVERSAL_KPIS = ['fin.revenue', 'fin.gross_margin', 'fin.ebitda', 'fin.runway', 'fin.net_burn', 'mkt.nps'];
   const focusReadings = UNIVERSAL_KPIS.map(mid => {
     const m = metricById(mid);
     const r = latestReading(mid, b.id);
@@ -596,89 +600,39 @@ function renderBrandBoard() {
       <div class="k-sub">${pill(r.status)} ${r.target !== null && r.target !== undefined ? '· target ' + fmt(r.target, m.unit) : ''}</div>
     </div>`).join('');
 
-  // Department cards — group all metrics for this brand by BU, EXCLUDING the KPI strip metrics (no duplication)
-  const BU_MAP = { fin: 'fin', hr: 'hr', impact: 'adm', it: 'it', mkt: 'mkt', sal: 'sal', ops: 'ops1' };
-  const deptGroups = {};
-  Object.values(GSD_METRICS).forEach(m => {
-    if (m.id.startsWith('funnel.')) return;
-    if (m.department === 'founder') return;
-    if (UNIVERSAL_KPIS.includes(m.id)) return; // already in the KPI strip
-    if (['fin.revenue_dept', 'fin.gross_margin_dept', 'fin.ebitda_dept'].includes(m.id)) return; // department costing lives in Departments view
-    const r = latestReading(m.id, b.id);
-    if (!r) return;
-    // ops splits by brand: ACDC → BU 7 ZOR BO 1; TLF + Papa Pasta → BU 8 ZOR BO 2
-    let buId = BU_MAP[m.department] || m.department;
-    if (m.department === 'ops') {
-      buId = (b.id === 'acdc') ? 'ops1' : 'ops2';
-    }
-    if (!deptGroups[buId]) deptGroups[buId] = [];
-    deptGroups[buId].push({ m, r });
-  });
+  // Brand-critical metrics — the metrics that matter MOST for THIS brand (from its focus list),
+  // excluding anything already in the KPI strip and any founder metrics. No department cards here — that's the Departments view.
+  const brandCritical = (b.focus_metrics || []).filter(mid => !UNIVERSAL_KPIS.includes(mid) && !String(mid).startsWith('founder.'));
+  const criticalReadings = brandCritical.map(mid => {
+    const m = metricById(mid);
+    const r = latestReading(mid, b.id);
+    return { m, r };
+  }).filter(x => x.r);
 
-  // Finance: combine Revenue + Gross Margin into one row, add EBITDA
-  if (deptGroups['fin']) {
-    const finItems = deptGroups['fin'];
-    const rev = finItems.find(x => x.m.id === 'fin.revenue');
-    const gm = finItems.find(x => x.m.id === 'fin.gross_margin');
-    const ebitda = finItems.find(x => x.m.id === 'fin.ebitda');
-    const combined = [];
-    if (rev && gm) {
-      combined.push({
-        m: { ...rev.m, name: 'Revenue + Gross Margin', id: 'fin.rev_gm', formula: 'revenue · (revenue - cogs) / revenue' },
-        r: { ...rev.r, value: rev.r.value, target: rev.r.target, status: rev.r.status, vs_prior: rev.r.vs_prior },
-        gm: gm.r
-      });
-    }
-    if (ebitda) combined.push(ebitda);
-    // keep the rest of finance (runway, burn, dso, etc.) but drop the split revenue/gm rows
-    const rest = finItems.filter(x => x.m.id !== 'fin.revenue' && x.m.id !== 'fin.gross_margin' && x.m.id !== 'fin.ebitda');
-    deptGroups['fin'] = [...combined, ...rest];
-  }
-
-  const cards = Object.entries(deptGroups).map(([deptId, items]) => {
-    const d = deptById(deptId);
-    const rows = items.map(({ m, r, gm }) => {
-      const pct = pctOf(r.value, r.target);
-      const width = pct !== null ? Math.min(100, Math.max(0, pct)) : 0;
-      // Combined Revenue + GM row: show both values
-      if (m.id === 'fin.rev_gm' && gm) {
-        return `
-        <div class="metric">
-          <div class="top">
-            <span class="label">${m.name}</span>
-            <span>
-              <span class="value" style="font-size:15px;">${fmt(r.value, m.unit)}</span>
-              <span class="value" style="font-size:15px; color:var(--accent2);">${fmt(gm.value, gm.m ? gm.m.unit : 'percent')}</span>
-              ${deltaHtml(r.vs_prior, m.direction)}
-              ${pill(r.status)}
-            </span>
-          </div>
-          <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(r.status)};"></div></div>
-          <div class="sub" style="font-size:10px; color:var(--muted);">${m.formula}</div>
-          <div class="sub" style="font-size:11px; color:var(--text); font-weight:600; margin-top:2px;">Money earned and profit after product costs.</div>
-        </div>`;
-      }
-      return `
-        <div class="metric">
-          <div class="top">
-            <span class="label">${m.name}</span>
-            <span>
-              <span class="value" style="font-size:15px;">${fmt(r.value, m.unit)}</span>
-              ${deltaHtml(r.vs_prior, m.direction)}
-              ${pill(r.status)}
-            </span>
-          </div>
-          <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(r.status)};"></div></div>
-          <div class="sub" style="font-size:10px; color:var(--muted);">${m.formula || ''}</div>
-          <div class="sub" style="font-size:11px; color:var(--text); font-weight:600; margin-top:2px;">${(typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || ''}</div>
-        </div>`;
-    }).join('');
-    return `<div class="card"><h3>${d ? (d.code + ' ' + d.name) : deptId}</h3>${rows}</div>`;
-  }).join('');
+  const criticalHtml = criticalReadings.length ? criticalReadings.map(({ m, r }) => {
+    const pct = pctOf(r.value, r.target);
+    const width = pct !== null ? Math.min(100, Math.max(0, pct)) : 0;
+    return `
+      <div class="metric">
+        <div class="top">
+          <span class="label">${m.name}</span>
+          <span>
+            <span class="value" style="font-size:15px;">${fmt(r.value, m.unit)}</span>
+            ${deltaHtml(r.vs_prior, m.direction)}
+            ${pill(r.status)}
+          </span>
+        </div>
+        <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(r.status)};"></div></div>
+        <div class="sub" style="font-size:10px; color:var(--muted);">${m.formula || ''}</div>
+        <div class="sub" style="font-size:11px; color:var(--text); font-weight:600; margin-top:2px;">${(typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || ''}</div>
+      </div>`;
+  }).join('') : '<div style="color:var(--muted); font-size:13px;">No brand-critical metrics beyond the KPI strip.</div>';
 
   $('#brand-board').innerHTML = `
     <div class="kpi-strip">${kpis}</div>
-    <div class="grid g-3">${cards}</div>`;
+    <div class="section-title"><span class="bar"></span> ${b.name} — Critical Metrics</div>
+    <div class="card">${criticalHtml}</div>
+    <div style="margin-top:12px; font-size:12px; color:var(--muted);">Full department breakdown lives in the <strong>Departments</strong> view — one BU across all brands.</div>`;
 }
 
 /* ================= Funnel ================= */
