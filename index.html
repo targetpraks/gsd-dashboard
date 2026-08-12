@@ -399,7 +399,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260812-7"></script>
+<script src="js/data.js?v=20260812-8"></script>
 <script>
 'use strict';
 
@@ -584,8 +584,10 @@ function renderBrandTabs() {
 
 function renderBrandBoard() {
   const b = brandById(state.brand);
-  // One universal KPI set for ALL brands — same ratings everywhere, comparable
-  const UNIVERSAL_KPIS = ['fin.revenue', 'fin.gross_margin', 'fin.ebitda', 'fin.runway', 'fin.net_burn', 'mkt.nps'];
+  // Universal KPIs — money + efficiency only, same board for every brand (conformity).
+  // Research-backed: Revenue vs Plan (normalizes brand sizes), Gross Margin, EBITDA,
+  // Net Burn (cash direction), Revenue per FTE (efficiency), NPS (user-requested main feature).
+  const UNIVERSAL_KPIS = ['fin.revenue_vs_plan', 'fin.gross_margin', 'fin.ebitda', 'fin.net_burn', 'hr.rev_per_fte', 'mkt.nps'];
   const focusReadings = UNIVERSAL_KPIS.map(mid => {
     const m = metricById(mid);
     const r = latestReading(mid, b.id);
@@ -600,12 +602,28 @@ function renderBrandBoard() {
       <div class="k-sub">${pill(r.status)} ${r.target !== null && r.target !== undefined ? '· target ' + fmt(r.target, m.unit) : ''}</div>
     </div>`).join('');
 
-  // Brand-critical metrics — the metrics that matter MOST for THIS brand (from its focus list),
-  // excluding anything already in the KPI strip and any founder metrics. No department cards here — that's the Departments view.
-  const brandCritical = (b.focus_metrics || []).filter(mid => !UNIVERSAL_KPIS.includes(mid) && !String(mid).startsWith('founder.'));
+  // Brand-critical metrics — each brand tells ONE story. No overlap with the KPI strip.
+  // No founder metrics (removed per instruction). No department metrics (those live in Departments).
+  const BRAND_CRITICAL = {
+    infinity: ['hr.playbook_coverage', 'impact.jobs_sustained', 'fin.recurring_ratio'],
+    tlf: ['ops.output_units', 'ops.quality_score', 'ops.delivery_on_time', 'impact.people_helped'],
+    infx: ['sal.nrr', 'ops.delivery_on_time', 'ops.csat', 'fin.recurring_ratio'],
+    fluxflow: ['fin.runway', 'sal.pipeline', 'it.automation_coverage', 'it.ai_adoption', 'sal.churn'],
+    divorced: ['fin.runway', 'mkt.community_size', 'impact.purpose_score', 'impact.people_helped'],
+    papapasta: ['ops.unit_margin', 'ops.quality_score', 'funnel.output_locations', 'ops.sop_compliance'],
+    acdc: ['ops.unit_margin', 'ops.sop_compliance', 'ops.delivery_on_time', 'impact.jobs_sustained'],
+  };
+  const brandCritical = (BRAND_CRITICAL[b.id] || []).filter(mid => !UNIVERSAL_KPIS.includes(mid));
   const criticalReadings = brandCritical.map(mid => {
     const m = metricById(mid);
-    const r = latestReading(mid, b.id);
+    // funnel.* metrics are keyed by product_id, not brand_id — map brand → product
+    let r = null;
+    if (m.id.startsWith('funnel.')) {
+      const prod = GSD_PRODUCTS.find(p => p.brand === b.id);
+      r = prod ? latestReading(m.id, null, prod.id) : null;
+    } else {
+      r = latestReading(m.id, b.id);
+    }
     return { m, r };
   }).filter(x => x.r);
 
@@ -768,17 +786,19 @@ function renderDeptTabs() {
 
 function renderDept() {
   const d = deptById(state.dept);
-  // Map metric department → BU id (ops splits by brand: ops1 for ACDC, ops2 for TLF/Papa Pasta)
-  const BU_MAP = { fin: 'fin', hr: 'hr', impact: 'adm', it: 'it', mkt: 'mkt', sal: 'sal', ops: 'ops1' };
-  const metrics = Object.values(GSD_METRICS).filter(m => {
-    if (m.id.startsWith('funnel.')) return false;
-    if (m.department === 'founder') return false;
-    if (['fin.revenue_dept', 'fin.gross_margin_dept', 'fin.ebitda_dept'].includes(m.id)) return false; // shown in the costing card below
-    if (['fin.revenue', 'fin.gross_margin', 'fin.ebitda'].includes(m.id)) return false; // brand-level financials live in the KPI strip / costing card — no duplicates
-    // ops metrics appear in BOTH BU 7 (ZOR BO 1) and BU 8 (ZOR BO 2)
-    if (m.department === 'ops') return state.dept === 'ops1' || state.dept === 'ops2';
-    return (BU_MAP[m.department] || m.department) === state.dept;
-  });
+  // Curated scorecard per BU — the identity. Full metric set lives in the Metric Library.
+  const SCORECARD = {
+    fin: ['fin.net_burn', 'fin.runway', 'fin.dso', 'fin.opex_ratio', 'fin.revenue_vs_plan'],
+    hr: ['hr.rev_per_fte', 'hr.attrition', 'hr.team_satisfaction', 'hr.playbook_coverage'],
+    adm: ['impact.people_helped', 'impact.purpose_score', 'impact.jobs_sustained'],
+    it: ['it.system_uptime', 'it.mttr_p1', 'it.open_tickets', 'it.automation_coverage'],
+    mkt: ['mkt.cost_per_lead', 'mkt.marketing_roi', 'mkt.brand_reach', 'mkt.help_first_content'],
+    sal: ['sal.pipeline_coverage', 'sal.win_rate', 'sal.nrr', 'sal.churn'],
+    ops1: ['ops.delivery_on_time', 'ops.csat', 'ops.unit_margin'],
+    ops2: ['ops.delivery_on_time', 'ops.csat', 'ops.unit_margin'],
+  };
+  const scorecardIds = SCORECARD[state.dept] || [];
+  const metrics = scorecardIds.map(mid => metricById(mid)).filter(Boolean);
   const rows = metrics.map(m => {
     const cells = Object.values(GSD_BRANDS).map(b => {
       const r = latestReading(m.id, b.id);
@@ -791,11 +811,11 @@ function renderDept() {
   }).join('');
   const headers = Object.values(GSD_BRANDS).map(b => `<th>${b.name}</th>`).join('');
 
-  // Departmental costing: Revenue, Gross Margin, EBITDA per department across brands
+  // Departmental costing: Cost, Cost-to-Serve, EBITDA per department across brands
   // SAME three metrics for every department — consistent, no duplicates
   const deptFinMetrics = [
-    { id: 'fin.revenue_dept', name: 'Department Revenue', unit: 'ZAR' },
-    { id: 'fin.gross_margin_dept', name: 'Department Gross Margin', unit: 'percent' },
+    { id: 'fin.cost_dept', name: 'Department Cost', unit: 'ZAR' },
+    { id: 'fin.cost_to_serve_dept', name: 'Cost-to-Serve', unit: 'percent' },
     { id: 'fin.ebitda_dept', name: 'Department EBITDA', unit: 'ZAR' },
   ];
   const deptFinRows = deptFinMetrics.map(fm => {
@@ -825,7 +845,7 @@ function renderDept() {
           <tbody>${deptFinRows}</tbody>
         </table>
       </div>
-      <div class="sub" style="font-size:10px; color:var(--muted); margin-top:6px;">Same three financial metrics for every department: Revenue · Gross Margin · EBITDA</div>
+      <div class="sub" style="font-size:10px; color:var(--muted); margin-top:6px;">Same three financial metrics for every department: Cost · Cost-to-Serve · EBITDA</div>
     </div>`;
 }
 
