@@ -400,7 +400,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260813-4"></script>
+<script src="js/data.js?v=20260813-5"></script>
 <script>
 'use strict';
 
@@ -414,7 +414,8 @@ const fmt = (v, unit) => {
   if (unit === 'percent') return v.toFixed(0) + '%';
   if (unit === 'ratio') return v.toFixed(1) + '×';
   if (unit === 'score_10') return v.toFixed(1) + '/10';
-  if (unit === 'score_5') return v.toFixed(1) + '/5';
+  if (unit === 'locations') return Math.round(v) + ' loc';
+  if (unit === 'units') return Math.round(v).toLocaleString('en-ZA') + ' units';
   if (unit === 'months') return v.toFixed(1) + ' mo';
   if (unit === 'days') return v.toFixed(0) + ' d';
   if (unit === 'hours') return v.toFixed(1) + ' h';
@@ -680,27 +681,26 @@ function renderBrandBoard() {
     infx: ['sal.nrr', 'ops.delivery_on_time', 'ops.csat', 'fin.recurring_ratio', 'infx.projects_completed', 'infx.projects_active', 'infx.time_spent_active', 'infx.estimated_cost_active', 'infx.deal_value_active', 'infx.avg_labor_rate'],
     fluxflow: ['fin.runway', 'sal.pipeline', 'it.automation_coverage', 'it.ai_adoption', 'sal.churn', 'sal.nrr', 'it.system_uptime', 'app.clients_onboarded', 'app.total_clients', 'app.client_growth', 'app.data_handled'],
     divorced: ['fin.runway', 'mkt.community_size', 'impact.purpose_score', 'impact.people_helped', 'sal.nrr', 'it.system_uptime', 'app.clients_onboarded', 'app.total_clients', 'app.client_growth', 'app.data_handled'],
-    papapasta: ['ops.unit_margin', 'ops.quality_score', 'funnel.output_locations', 'ops.sop_compliance'],
-    acdc: ['ops.unit_margin', 'ops.sop_compliance', 'ops.delivery_on_time', 'impact.jobs_sustained'],
+    papapasta: { sections: [
+      { title: 'Franchisor — Franchisee-Facing', metrics: ['franch.locations', 'franch.consultants_per_location', 'franch.nps', 'franch.sop_compliance'] },
+      { title: 'Brand — Client-Facing', metrics: ['franch.group_turnover', 'franch.products_sold_qty', 'franch.products_sold_turnover', 'franch.brand_nps', 'franch.brand_csat'] },
+    ]},
+    acdc: { sections: [
+      { title: 'Franchisor — Franchisee-Facing', metrics: ['franch.locations', 'franch.consultants_per_location', 'franch.nps', 'franch.sop_compliance'] },
+      { title: 'Brand — Client-Facing', metrics: ['franch.group_turnover', 'franch.products_sold_qty', 'franch.products_sold_turnover', 'franch.brand_nps', 'franch.brand_csat'] },
+    ]},
   };
-  const brandCritical = (BRAND_CRITICAL[b.id] || []).filter(mid => !UNIVERSAL_KPIS.includes(mid));
-  const criticalReadings = brandCritical.map(mid => {
-    // Support "metric.product" entries (e.g. funnel.output_zar.inf_consultancy) for per-product funnel metrics
+  // Resolve readings for a metric id (flat form), supporting product-qualified ids
+  function resolveReading(mid) {
     let metricId = mid;
     let productId = null;
     let labelOverride = null;
     if (mid.includes('.')) {
       const parts = mid.split('.');
-      // Try longest product match: metric prefix + product id (e.g. funnel.output_zar.inf_consultancy)
       for (let k = parts.length - 1; k >= 2; k--) {
         const prodId = parts.slice(k).join('.');
         const prod = GSD_PRODUCTS.find(p => p.id === prodId);
-        if (prod) {
-          metricId = parts.slice(0, k).join('.');
-          productId = prod.id;
-          labelOverride = prod.name;
-          break;
-        }
+        if (prod) { metricId = parts.slice(0, k).join('.'); productId = prod.id; labelOverride = prod.name; break; }
       }
     }
     const m = metricById(metricId);
@@ -711,10 +711,10 @@ function renderBrandBoard() {
     } else {
       r = latestReading(m.id, b.id);
     }
-    return { m, r, label: labelOverride };
-  }).filter(x => x && x.r);
+    return r ? { m, r, label: labelOverride } : null;
+  }
 
-  const criticalHtml = criticalReadings.length ? criticalReadings.map(({ m, r, label }) => {
+  function metricRowHtml({ m, r, label }) {
     const pct = pctOf(r.value, r.target);
     const width = pct !== null ? Math.min(100, Math.max(0, pct)) : 0;
     return `
@@ -731,12 +731,27 @@ function renderBrandBoard() {
         <div class="sub" style="font-size:10px; color:var(--muted);">${m.formula || ''}</div>
         <div class="sub" style="font-size:11px; color:var(--text); font-weight:600; margin-top:2px;">${(typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || ''}</div>
       </div>`;
-  }).join('') : '<div style="color:var(--muted); font-size:13px;">No brand-critical metrics beyond the KPI strip.</div>';
+  }
+
+  const conf = BRAND_CRITICAL[b.id];
+  let criticalHtml = '';
+  if (conf && conf.sections) {
+    // Sectioned board (franchise brands): Franchisor vs Brand split
+    criticalHtml = conf.sections.map(sec => {
+      const rows = sec.metrics.map(resolveReading).filter(Boolean).map(metricRowHtml).join('');
+      return `
+        <div class="section-title"><span class="bar"></span> ${sec.title}</div>
+        <div class="card" style="margin-bottom:14px;">${rows}</div>`;
+    }).join('');
+  } else {
+    const readings = (conf || []).filter(mid => !UNIVERSAL_KPIS.includes(mid)).map(resolveReading).filter(Boolean);
+    criticalHtml = readings.length ? `<div class="card">${readings.map(metricRowHtml).join('')}</div>` : '<div class="card"><div style="color:var(--muted); font-size:13px;">No brand-critical metrics beyond the KPI strip.</div></div>';
+  }
 
   $('#brand-board').innerHTML = `
     <div class="kpi-strip">${kpis}</div>
     <div class="section-title"><span class="bar"></span> ${b.name} — Critical Metrics</div>
-    <div class="card">${criticalHtml}</div>
+    ${criticalHtml}
     <div style="margin-top:12px; font-size:12px; color:var(--muted);">Full department breakdown lives in the <strong>Departments</strong> view — one BU across all brands.</div>`;
 }
 

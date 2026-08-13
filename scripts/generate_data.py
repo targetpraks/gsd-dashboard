@@ -120,6 +120,10 @@ def gen_value(metric, brand_id, month_idx):
             val = random.uniform(5, 200)
         elif unit == "ZAR_per_gram":
             val = random.uniform(0.5, 5)
+        elif unit == "locations":
+            val = random.uniform(2, 40)
+        elif unit == "units":
+            val = random.uniform(200, 5000)
         else:
             val = random.uniform(1, 100)
 
@@ -286,6 +290,33 @@ for _id, _spec in {
     "app.data_handled": ("Data Handled", "Volume of data the application is processing.", "sum(data processed)", "records", "higher_is_better", "Platform load."),
 }.items():
     metrics[_id] = _app(_id, *_spec)
+
+# ---- Shared Franchise metrics (Papa Pasta + ACDC Express — franchise systems) ----
+# Split: FRANCHISOR stats (relationship with franchisees) vs BRAND stats (client-facing)
+def _franch(id, name, definition, formula, unit, direction, target=0, note=""):
+    return {
+        "id": id, "name": name, "department": "ops", "layer": 3,
+        "definition": definition, "formula": formula, "type": "lagging",
+        "unit": unit, "direction": direction,
+        "target": {"mode": "per_brand", "values": {b["id"]: target for b in C["taxonomy"]["brands"]}},
+        "thresholds": {"green": None, "amber": None, "red": None},
+        "cadence": "monthly", "source": "franchise_ops", "owner": "TBC",
+        "framework_pillar": None, "impact_metric": False, "active": True, "note": note,
+    }
+for _id, _spec in {
+    # Franchisor stats
+    "franch.locations": ("Franchise Locations", "Total operating franchise locations.", "count(locations)", "locations", "higher_is_better", "Franchisor — network size."),
+    "franch.consultants_per_location": ("Service Consultants per Location", "Franchise service consultants divided by locations.", "consultants / locations", "ratio", "higher_is_better", "Franchisor — support coverage."),
+    "franch.nps": ("Franchisor NPS", "Net Promoter Score of the franchisor — how franchisees rate the franchisor.", "promoters_pct - detractors_pct", "nps", "higher_is_better", "Franchisor — franchisee sentiment."),
+    "franch.sop_compliance": ("Franchisor SOP Compliance", "Average SOP compliance across the network.", "avg(sop_audit_score)", "percent", "higher_is_better", "Franchisor — network discipline."),
+    # Brand (client-facing) stats
+    "franch.group_turnover": ("Group Turnover", "Total group turnover across all locations.", "sum(location_revenue)", "ZAR", "higher_is_better", "Brand — group revenue."),
+    "franch.products_sold_qty": ("Products Sold — Quantity", "Total quantity of product sold across the network.", "sum(units_sold)", "units", "higher_is_better", "Brand — sales volume."),
+    "franch.products_sold_turnover": ("Products Sold — Turnover", "Turnover from product sold across the network.", "sum(product_revenue)", "ZAR", "higher_is_better", "Brand — sales value."),
+    "franch.brand_nps": ("Brand NPS", "Net Promoter Score of the brand — how customers rate the brand.", "promoters_pct - detractors_pct", "nps", "higher_is_better", "Brand — customer sentiment."),
+    "franch.brand_csat": ("Brand CSAT", "Customer satisfaction with the brand, 1-10.", "avg(csat_score)", "score_10", "higher_is_better", "Brand — customer happiness."),
+}.items():
+    metrics[_id] = _franch(_id, *_spec)
 
 # ---- The Local Farmer production metrics (Ricardo's spec) ----
 def _tlf(id, name, definition, formula, unit, direction, target=0, note=""):
@@ -510,6 +541,8 @@ NEW_METRIC_IDS = [
     "infx.projects_completed", "infx.projects_active", "infx.time_spent_active",
     "infx.estimated_cost_active", "infx.deal_value_active", "infx.avg_labor_rate",
     "app.clients_onboarded", "app.total_clients", "app.client_growth", "app.data_handled",
+    "franch.locations", "franch.consultants_per_location", "franch.nps", "franch.sop_compliance",
+    "franch.group_turnover", "franch.products_sold_qty", "franch.products_sold_turnover", "franch.brand_nps", "franch.brand_csat",
 ]
 for mid in NEW_METRIC_IDS:
     m = metrics[mid]
@@ -731,6 +764,15 @@ FORMULA_EXPLANATIONS = {
     "app.total_clients": "Active clients on the app.",
     "app.client_growth": "Net client growth.",
     "app.data_handled": "Data the app is processing.",
+    "franch.locations": "Operating franchise locations.",
+    "franch.consultants_per_location": "Consultants per location.",
+    "franch.nps": "Franchisees rating the franchisor.",
+    "franch.sop_compliance": "Network SOP discipline.",
+    "franch.group_turnover": "Total group revenue.",
+    "franch.products_sold_qty": "Units sold across the network.",
+    "franch.products_sold_turnover": "Revenue from product sold.",
+    "franch.brand_nps": "Customers rating the brand.",
+    "franch.brand_csat": "Customer happiness with the brand.",
 }
 
 # ---- Emit data.js ----
