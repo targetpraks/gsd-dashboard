@@ -399,7 +399,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260812-8"></script>
+<script src="js/data.js?v=20260813-1"></script>
 <script>
 'use strict';
 
@@ -789,13 +789,13 @@ function renderDept() {
   // Curated scorecard per BU — the identity. Full metric set lives in the Metric Library.
   const SCORECARD = {
     fin: ['fin.net_burn', 'fin.runway', 'fin.dso', 'fin.opex_ratio', 'fin.revenue_vs_plan'],
-    hr: ['hr.rev_per_fte', 'hr.attrition', 'hr.team_satisfaction', 'hr.playbook_coverage'],
-    adm: ['impact.people_helped', 'impact.purpose_score', 'impact.jobs_sustained'],
+    hr: ['hr.rev_per_fte', 'hr.attrition', 'hr.team_satisfaction', 'hr.playbook_coverage', 'hr.interviews_done', 'hr.people_recruited', 'hr.training_hours_completed', 'hr.curriculum_completion_pct'],
+    adm: ['adm.projects_overdue', 'adm.projects_overdue_rate', 'adm.projects_completed', 'adm.inbox_unread', 'adm.inbox_response_time', 'adm.zeestore_turnover'],
     it: ['it.system_uptime', 'it.mttr_p1', 'it.open_tickets', 'it.automation_coverage'],
-    mkt: ['mkt.cost_per_lead', 'mkt.marketing_roi', 'mkt.brand_reach', 'mkt.help_first_content'],
-    sal: ['sal.pipeline_coverage', 'sal.win_rate', 'sal.nrr', 'sal.churn'],
-    ops1: ['ops.delivery_on_time', 'ops.csat', 'ops.unit_margin'],
-    ops2: ['ops.delivery_on_time', 'ops.csat', 'ops.unit_margin'],
+    mkt: ['mkt.cost_per_lead', 'mkt.marketing_roi', 'mkt.brand_reach', 'mkt.total_posts', 'mkt.video_posts', 'mkt.email_campaigns', 'mkt.email_open_rate'],
+    sal: ['sal.pipeline_coverage', 'sal.win_rate', 'sal.nrr', 'sal.churn', 'sal.calls_logged', 'sal.avg_call_time'],
+    ops1: ['ops.delivery_on_time', 'ops.csat', 'ops.unit_margin', 'ops.site_visits', 'ops.avg_site_visits_per_location', 'ops.brc_completed', 'ops.brc_score', 'ops.ticket_resolution_rate', 'ops.ticket_response_time', 'ops.success_tracker', 'ops.letters_of_concern'],
+    ops2: ['ops.delivery_on_time', 'ops.csat', 'ops.unit_margin', 'ops.site_visits', 'ops.avg_site_visits_per_location', 'ops.brc_completed', 'ops.brc_score', 'ops.ticket_resolution_rate', 'ops.ticket_response_time', 'ops.success_tracker', 'ops.letters_of_concern'],
   };
   const scorecardIds = SCORECARD[state.dept] || [];
   const metrics = scorecardIds.map(mid => metricById(mid)).filter(Boolean);
@@ -810,6 +810,17 @@ function renderDept() {
     return `<tr><td style="font-weight:600;">${m.name}</td><td class="mono" style="color:var(--muted);">${m.id}</td><td style="font-size:12px; color:var(--text); font-weight:600;">${plain}</td><td class="mono" style="color:var(--accent2); font-size:11px;">${f}</td>${cells}</tr>`;
   }).join('');
   const headers = Object.values(GSD_BRANDS).map(b => `<th>${b.name}</th>`).join('');
+
+  // Department NPS — internal + external, same for every department
+  const npsRows = ['nps.internal_dept', 'nps.external_dept'].map(nid => {
+    const m = metricById(nid);
+    const cells = Object.values(GSD_BRANDS).map(b => {
+      const r = latestReading(nid, b.id);
+      if (!r) return `<td class="mono" style="color:var(--muted);">—</td>`;
+      return `<td class="mono">${fmt(r.value, m.unit)} ${pill(r.status)}</td>`;
+    }).join('');
+    return `<tr><td style="font-weight:600;">${m.name}</td>${cells}</tr>`;
+  }).join('');
 
   // Departmental costing: Cost, Cost-to-Serve, EBITDA per department across brands
   // SAME three metrics for every department — consistent, no duplicates
@@ -836,6 +847,16 @@ function renderDept() {
           <tbody>${rows}</tbody>
         </table>
       </div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <h3>Department NPS — ${d.full || d.name}</h3>
+      <div style="overflow-x:auto;">
+        <table class="table">
+          <thead><tr><th>Metric</th>${headers}</tr></thead>
+          <tbody>${npsRows}</tbody>
+        </table>
+      </div>
+      <div class="sub" style="font-size:10px; color:var(--muted); margin-top:6px;">Internal = would the team recommend working here? · External = would customers recommend working with us?</div>
     </div>
     <div class="card">
       <h3>Departmental Costing — ${d.full || d.name}</h3>

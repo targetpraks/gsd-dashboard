@@ -241,6 +241,69 @@ metrics["mkt.nps"] = {
     "active": True,
     "note": "Main reporting feature — customer advocacy."
 }
+# ---- New operational metrics (Ricardo's spec) ----
+def _m(id, name, dept, definition, formula, unit, direction, target=0, note=""):
+    return {
+        "id": id, "name": name, "department": dept, "layer": 3,
+        "definition": definition, "formula": formula, "type": "lagging",
+        "unit": unit, "direction": direction,
+        "target": {"mode": "per_brand", "values": {b["id"]: target for b in C["taxonomy"]["brands"]}},
+        "thresholds": {"green": None, "amber": None, "red": None},
+        "cadence": "monthly", "source": "manual_capture", "owner": "TBC",
+        "framework_pillar": None, "impact_metric": False, "active": True, "note": note,
+    }
+
+for _id, _spec in {
+    "hr.interviews_done": ("Interviews Done", "hr", "Interviews conducted for open roles.", "count(interviews)", "interviews", "higher_is_better", "Recruitment pipeline."),
+    "hr.people_recruited": ("People Recruited", "hr", "New hires brought on board.", "count(hires)", "people", "higher_is_better", "Recruitment output."),
+    "hr.training_hours_completed": ("Training Hours Completed", "hr", "Training hours actually completed.", "sum(training_hours_completed)", "hours", "higher_is_better", "Specialized training department."),
+    "hr.curriculum_completion_pct": ("Curriculum Completion", "hr", "Percentage of the training curriculum completed.", "curriculum_done / curriculum_total", "percent", "higher_is_better", "Training curriculum progress."),
+    "adm.projects_overdue": ("Projects Overdue", "impact", "Projects past their due date.", "count(projects where overdue)", "projects", "lower_is_better", "ADM project control."),
+    "adm.projects_overdue_rate": ("Projects Overdue Rate", "impact", "Share of projects running late.", "overdue / total_projects", "percent", "lower_is_better", "How often projects run late."),
+    "adm.projects_completed": ("Projects Completed", "impact", "Projects finished in the period.", "count(projects done)", "projects", "higher_is_better", "ADM delivery."),
+    "adm.inbox_unread": ("Inbox Unread", "impact", "Unread messages across the team's Zoho inbox.", "count(unread)", "messages", "lower_is_better", "Zoho inbox hygiene."),
+    "adm.inbox_response_time": ("Inbox Response Time", "impact", "How fast the team reads and responds to inbox messages.", "avg(response_time)", "hours", "lower_is_better", "Zoho inbox responsiveness."),
+    "adm.zeestore_turnover": ("ZeeStore Turnover", "impact", "ZeeStore sales turnover.", "sum(zeestore_revenue)", "ZAR", "higher_is_better", "ZeeStore responsibility."),
+    "mkt.total_posts": ("Total Posts Created", "mkt", "All posts published across channels.", "count(posts)", "posts", "higher_is_better", "Content output."),
+    "mkt.video_posts": ("Video Posts Created", "mkt", "Video posts published.", "count(video_posts)", "posts", "higher_is_better", "Video content output."),
+    "mkt.email_campaigns": ("Email Campaigns Sent", "mkt", "Email campaigns sent out.", "count(campaigns)", "campaigns", "higher_is_better", "Email marketing volume."),
+    "mkt.email_open_rate": ("Email Open Rate", "mkt", "Share of emails opened.", "opened / sent", "percent", "higher_is_better", "Email marketing effectiveness."),
+    "sal.calls_logged": ("Calls Logged", "sal", "Sales calls logged in the period.", "count(calls)", "calls", "higher_is_better", "Sales activity."),
+    "sal.avg_call_time": ("Average Call Time", "sal", "Average duration of logged calls.", "total_call_minutes / count(calls)", "minutes", "higher_is_better", "Sales call quality."),
+    "ops.site_visits": ("Site Visits", "ops", "Franchise site visits completed.", "count(site_visits)", "visits", "higher_is_better", "Franchise support visits."),
+    "ops.avg_site_visits_per_location": ("Avg Site Visits per Location", "ops", "Average visits per location — catches over-visiting one site.", "site_visits / locations", "visits_per_location", "band", "Visit balance."),
+    "ops.brc_completed": ("BRC Completed", "ops", "Business Requirement Checklists completed.", "count(brc_done)", "checklists", "higher_is_better", "BRC compliance."),
+    "ops.brc_score": ("BRC Score", "ops", "Average score on the Business Requirement Checklist.", "avg(brc_score)", "percent", "higher_is_better", "BRC quality."),
+    "ops.ticket_resolution_rate": ("Ticket Resolution Rate", "ops", "Franchise tickets resolved on time.", "resolved / total_tickets", "percent", "higher_is_better", "Franchise ticket support."),
+    "ops.ticket_response_time": ("Ticket Response Time", "ops", "How fast franchise tickets get a response.", "avg(response_time)", "hours", "lower_is_better", "Franchise ticket responsiveness."),
+    "ops.success_tracker": ("Success Tracker", "ops", "Success tracker score for franchise support.", "avg(success_score)", "score_10", "higher_is_better", "Franchise success tracking."),
+    "ops.letters_of_concern": ("Letters of Concern", "ops", "Letters of concern sent to franchisees.", "count(letters)", "letters", "lower_is_better", "Franchise discipline."),
+}.items():
+    metrics[_id] = _m(_id, *_spec)
+
+# Department NPS — internal + external, keyed by dept
+metrics["nps.internal_dept"] = {
+    "id": "nps.internal_dept", "name": "Internal NPS", "department": "mkt", "layer": 2,
+    "definition": "Internal Net Promoter Score for this department — would the team recommend working here?",
+    "formula": "promoters_pct - detractors_pct", "type": "lagging", "unit": "nps",
+    "direction": "higher_is_better",
+    "target": {"mode": "fixed", "value": 50},
+    "thresholds": {"green": 50, "amber": 30, "red": 0},
+    "cadence": "monthly", "source": "survey", "owner": "TBC",
+    "framework_pillar": None, "impact_metric": False, "active": True,
+    "note": "Department NPS — internal."
+}
+metrics["nps.external_dept"] = {
+    "id": "nps.external_dept", "name": "External NPS", "department": "mkt", "layer": 2,
+    "definition": "External Net Promoter Score for this department — would customers recommend working with us?",
+    "formula": "promoters_pct - detractors_pct", "type": "lagging", "unit": "nps",
+    "direction": "higher_is_better",
+    "target": {"mode": "fixed", "value": 50},
+    "thresholds": {"green": 50, "amber": 30, "red": 0},
+    "cadence": "monthly", "source": "survey", "owner": "TBC",
+    "framework_pillar": None, "impact_metric": False, "active": True,
+    "note": "Department NPS — external."
+}
 brands = {b["id"]: b for b in C["taxonomy"]["brands"]}
 products = C["taxonomy"]["products"]["items"]
 
@@ -356,6 +419,74 @@ for bid in brands:
             "status": "green" if series[i]["value"] >= 50 else ("amber" if series[i]["value"] >= 30 else "red"),
             "vs_prior": vs
         })
+
+# ---- New operational metric readings (Ricardo's spec) ----
+# These metrics are per brand (except dept NPS which is per brand × dept)
+NEW_METRIC_IDS = [
+    "hr.interviews_done", "hr.people_recruited", "hr.training_hours_completed", "hr.curriculum_completion_pct",
+    "adm.projects_overdue", "adm.projects_overdue_rate", "adm.projects_completed",
+    "adm.inbox_unread", "adm.inbox_response_time", "adm.zeestore_turnover",
+    "mkt.total_posts", "mkt.video_posts", "mkt.email_campaigns", "mkt.email_open_rate",
+    "sal.calls_logged", "sal.avg_call_time",
+    "ops.site_visits", "ops.avg_site_visits_per_location", "ops.brc_completed", "ops.brc_score",
+    "ops.ticket_resolution_rate", "ops.ticket_response_time", "ops.success_tracker", "ops.letters_of_concern",
+]
+for mid in NEW_METRIC_IDS:
+    m = metrics[mid]
+    for bid in brands:
+        series = []
+        for i, period in enumerate(MONTHS):
+            unit = m["unit"]
+            if unit == "percent":
+                val = random.uniform(40, 98)
+            elif unit == "ZAR":
+                val = random.uniform(50000, 900000)
+            elif unit == "hours":
+                val = random.uniform(2, 60)
+            elif unit == "minutes":
+                val = random.uniform(5, 45)
+            elif unit == "score_10":
+                val = random.uniform(4, 9.5)
+            elif unit == "visits_per_location":
+                val = random.uniform(0.5, 4)
+            elif unit == "nps":
+                val = random.uniform(-10, 70)
+            else:
+                val = random.uniform(1, 200)
+            if unit in ("percent", "score_10", "visits_per_location", "nps"):
+                val = round(val, 1)
+            else:
+                val = int(round(val))
+            series.append({"period": period, "value": val})
+        for i, period in enumerate(MONTHS):
+            vs = None
+            if i > 0:
+                vs = round(series[i]["value"] - series[i-1]["value"], 1)
+            readings.append({
+                "metric_id": mid, "brand_id": bid, "period": period,
+                "value": series[i]["value"], "target": 0,
+                "status": "green" if series[i]["value"] >= 0 else "red",
+                "vs_prior": vs
+            })
+
+# ---- Department NPS (internal + external) per brand × dept ----
+for nps_id in ["nps.internal_dept", "nps.external_dept"]:
+    for bid in brands:
+        for did in depts:
+            series = []
+            for i, period in enumerate(MONTHS):
+                val = random.uniform(-10, 70)
+                series.append({"period": period, "value": round(val, 1)})
+            for i, period in enumerate(MONTHS):
+                vs = None
+                if i > 0:
+                    vs = round(series[i]["value"] - series[i-1]["value"], 1)
+                readings.append({
+                    "metric_id": nps_id, "brand_id": bid, "dept_id": did, "period": period,
+                    "value": series[i]["value"], "target": 50,
+                    "status": "green" if series[i]["value"] >= 50 else ("amber" if series[i]["value"] >= 30 else "red"),
+                    "vs_prior": vs
+                })
 
 # ---- Department-level Cost, Cost-to-Serve, EBITDA (departmental costing) ----
 # Every department gets the SAME three financial metrics: Cost, Cost-to-Serve, EBITDA
@@ -473,6 +604,32 @@ FORMULA_EXPLANATIONS = {
     "fin.ebitda_dept": "Profit per department.",
     "fin.cost_dept": "What this department spends.",
     "fin.cost_to_serve_dept": "Department cost vs group revenue.",
+    "hr.interviews_done": "Interviews conducted.",
+    "hr.people_recruited": "New hires brought on.",
+    "hr.training_hours_completed": "Training hours actually done.",
+    "hr.curriculum_completion_pct": "Share of training curriculum done.",
+    "adm.projects_overdue": "Projects running late.",
+    "adm.projects_overdue_rate": "How often projects run late.",
+    "adm.projects_completed": "Projects finished.",
+    "adm.inbox_unread": "Unread inbox messages.",
+    "adm.inbox_response_time": "Hours to respond to inbox.",
+    "adm.zeestore_turnover": "ZeeStore sales.",
+    "mkt.total_posts": "Posts published.",
+    "mkt.video_posts": "Video posts published.",
+    "mkt.email_campaigns": "Email campaigns sent.",
+    "mkt.email_open_rate": "Share of emails opened.",
+    "sal.calls_logged": "Sales calls logged.",
+    "sal.avg_call_time": "Average call length.",
+    "ops.site_visits": "Franchise site visits.",
+    "ops.avg_site_visits_per_location": "Visits per location.",
+    "ops.brc_completed": "BRC checklists done.",
+    "ops.brc_score": "BRC average score.",
+    "ops.ticket_resolution_rate": "Franchise tickets resolved.",
+    "ops.ticket_response_time": "Hours to respond to tickets.",
+    "ops.success_tracker": "Franchise success score.",
+    "ops.letters_of_concern": "Letters sent to franchisees.",
+    "nps.internal_dept": "Would the team recommend working here?",
+    "nps.external_dept": "Would customers recommend working with us?",
 }
 
 # ---- Emit data.js ----
