@@ -247,6 +247,27 @@ metrics["mkt.nps"] = {
     "active": True,
     "note": "Main reporting feature — customer advocacy."
 }
+# ---- INFX Solutions project metrics (Ricardo's spec) ----
+def _infx(id, name, definition, formula, unit, direction, target=0, note=""):
+    return {
+        "id": id, "name": name, "department": "ops", "layer": 3,
+        "definition": definition, "formula": formula, "type": "lagging",
+        "unit": unit, "direction": direction,
+        "target": {"mode": "per_brand", "values": {b["id"]: target for b in C["taxonomy"]["brands"]}},
+        "thresholds": {"green": None, "amber": None, "red": None},
+        "cadence": "monthly", "source": "zoho_projects", "owner": "TBC",
+        "framework_pillar": None, "impact_metric": False, "active": True, "note": note,
+    }
+for _id, _spec in {
+    "infx.projects_completed": ("Projects Completed", "Projects actually completed and handed over.", "count(projects done)", "projects", "higher_is_better", "Delivery output."),
+    "infx.projects_active": ("Active Projects", "Projects currently in progress.", "count(projects in progress)", "projects", "higher_is_better", "Current workload."),
+    "infx.time_spent_active": ("Time Spent — Active Projects", "Hours logged against active projects.", "sum(hours logged)", "hours", "higher_is_better", "Effort on active work."),
+    "infx.estimated_cost_active": ("Estimated Cost — Active Projects", "Current estimated cost of active projects.", "sum(estimated cost)", "ZAR", "higher_is_better", "Cost exposure."),
+    "infx.deal_value_active": ("Deal Value — Active Projects", "Sold value of active projects.", "sum(deal value)", "ZAR", "higher_is_better", "Revenue locked in."),
+    "infx.avg_labor_rate": ("Average Labor Rate", "Revenue per billed hour — the effective labor rate.", "billed_revenue / billed_hours", "ZAR_per_hour", "higher_is_better", "Rate quality."),
+}.items():
+    metrics[_id] = _infx(_id, *_spec)
+
 # ---- The Local Farmer production metrics (Ricardo's spec) ----
 def _tlf(id, name, definition, formula, unit, direction, target=0, note=""):
     return {
@@ -467,6 +488,8 @@ NEW_METRIC_IDS = [
     "tlf.facility_utilization_mushroom", "tlf.facility_utilization_microgreen",
     "tlf.subscriptions_loaded", "tlf.subscription_retention",
     "tlf.total_yield_mushroom", "tlf.total_yield_microgreen",
+    "infx.projects_completed", "infx.projects_active", "infx.time_spent_active",
+    "infx.estimated_cost_active", "infx.deal_value_active", "infx.avg_labor_rate",
 ]
 for mid in NEW_METRIC_IDS:
     m = metrics[mid]
@@ -678,6 +701,12 @@ FORMULA_EXPLANATIONS = {
     "tlf.subscription_retention": "Subscriptions kept.",
     "tlf.total_yield_mushroom": "Kg of mushrooms grown.",
     "tlf.total_yield_microgreen": "Kg of microgreens grown.",
+    "infx.projects_completed": "Projects handed over.",
+    "infx.projects_active": "Projects in progress.",
+    "infx.time_spent_active": "Hours on active projects.",
+    "infx.estimated_cost_active": "Estimated cost of active work.",
+    "infx.deal_value_active": "Sold value of active work.",
+    "infx.avg_labor_rate": "Revenue per billed hour.",
 }
 
 # ---- Emit data.js ----
