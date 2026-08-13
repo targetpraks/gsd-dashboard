@@ -320,8 +320,8 @@
   <div class="nav">
     <button class="nav-btn active" data-view="ceo">👑 CEO Twelve</button>
     <button class="nav-btn" data-view="brands">🏢 Brand Boards</button>
-    <button class="nav-btn" data-view="funnel">🔻 Funnel</button>
     <button class="nav-btn" data-view="depts">🏛 Departments</button>
+    <button class="nav-btn" data-view="funnel">🔻 Funnel</button>
     <button class="nav-btn" data-view="library">📚 Metric Library</button>
     <button class="nav-btn" data-view="alerts">🚨 Alerts <span class="count-badge" id="alert-count">0</span></button>
     <button class="nav-btn" data-view="system">⚙️ System</button>
@@ -329,6 +329,7 @@
     <button class="nav-btn" id="period-prev">◀</button>
     <span class="nav-btn" id="period-label" style="cursor:default; color:var(--text);"></span>
     <button class="nav-btn" id="period-next">▶</button>
+    <button class="nav-btn" id="period-mode" style="cursor:pointer;">📅 Month</button>
   </div>
 
   <!-- ============ CEO TWELVE ============ -->
@@ -445,7 +446,36 @@ let state = {
   funnelProduct: 'infx_solutions',
   dept: 'fin',
   period: GSD_CURRENT,
+  periodMode: 'month', // 'month' | 'quarter'
 };
+
+// Quarter helpers — derive quarters from the available months
+const QUARTERS = (() => {
+  const qs = [];
+  GSD_MONTHS.forEach(m => {
+    const [y, mo] = m.split('-').map(Number);
+    const q = Math.floor((mo - 1) / 3) + 1;
+    const key = `${y}-Q${q}`;
+    if (!qs.find(x => x.key === key)) qs.push({ key, label: `Q${q} ${y}`, months: [] });
+    qs.find(x => x.key === key).months.push(m);
+  });
+  return qs;
+})();
+function currentQuarterKey() {
+  const [y, mo] = state.period.split('-').map(Number);
+  return `${y}-Q${Math.floor((mo - 1) / 3) + 1}`;
+}
+function quarterMonths(key) {
+  const q = QUARTERS.find(x => x.key === key);
+  return q ? q.months : [state.period];
+}
+function periodLabel() {
+  if (state.periodMode === 'quarter') {
+    const q = QUARTERS.find(x => x.key === currentQuarterKey());
+    return q ? q.label : state.period;
+  }
+  return state.period;
+}
 
 const metricById = (id) => GSD_METRICS[id];
 const brandById = (id) => GSD_BRANDS[id];
@@ -474,6 +504,28 @@ function readingsFor(metricId, brandId, productId, period, origin) {
   );
 }
 function latestReading(metricId, brandId, productId, origin) {
+  // In quarter mode, aggregate across the quarter's months
+  if (state.periodMode === 'quarter') {
+    const months = quarterMonths(currentQuarterKey());
+    const rs = GSD_READINGS.filter(r =>
+      r.metric_id === metricId &&
+      (brandId ? r.brand_id === brandId : true) &&
+      (productId ? r.product_id === productId : true) &&
+      (origin ? r.origin === origin : true) &&
+      months.includes(r.period)
+    );
+    if (!rs.length) return null;
+    const numeric = rs.filter(r => typeof r.value === 'number');
+    if (!numeric.length) return null;
+    const m = metricById(metricId);
+    // Percent / ratio / score metrics: average across the quarter (a rate is not additive)
+    const avgLike = m && ['percent', 'ratio', 'score_10', 'score_5', 'nps', 'visits_per_location', 'hours', 'minutes', 'days', 'months'].includes(m.unit);
+    const agg = avgLike
+      ? numeric.reduce((s, r) => s + r.value, 0) / numeric.length
+      : numeric.reduce((s, r) => s + r.value, 0);
+    const first = rs[0];
+    return { ...first, value: Math.round(agg * 10) / 10, vs_prior: null };
+  }
   const rs = readingsFor(metricId, brandId, productId, state.period, origin);
   return rs.length ? rs[0] : null;
 }
@@ -496,12 +548,27 @@ function switchView(view) {
 $$('.nav-btn[data-view]').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
 
 $('#period-prev').addEventListener('click', () => {
+  if (state.periodMode === 'quarter') {
+    const i = QUARTERS.findIndex(q => q.key === currentQuarterKey());
+    if (i > 0) { state.period = QUARTERS[i - 1].months[0]; render(); }
+    return;
+  }
   const i = GSD_MONTHS.indexOf(state.period);
   if (i > 0) { state.period = GSD_MONTHS[i - 1]; render(); }
 });
 $('#period-next').addEventListener('click', () => {
+  if (state.periodMode === 'quarter') {
+    const i = QUARTERS.findIndex(q => q.key === currentQuarterKey());
+    if (i < QUARTERS.length - 1) { state.period = QUARTERS[i + 1].months[0]; render(); }
+    return;
+  }
   const i = GSD_MONTHS.indexOf(state.period);
   if (i < GSD_MONTHS.length - 1) { state.period = GSD_MONTHS[i + 1]; render(); }
+});
+$('#period-mode').addEventListener('click', () => {
+  state.periodMode = state.periodMode === 'month' ? 'quarter' : 'month';
+  $('#period-mode').textContent = state.periodMode === 'month' ? '📅 Month' : '📅 Quarter';
+  render();
 });
 
 /* ================= CEO Twelve (per brand) ================= */
@@ -744,7 +811,7 @@ function renderFunnel() {
       <div class="funnel-row">${stageHtml[0]}${arrows[0]}${stageHtml[1]}${arrows[1]}${stageHtml[2]}</div>
     </div>
     <div class="card" style="margin-bottom:14px;">
-      <h3>Lead Origin Split — ${p.name} · ${state.period}</h3>
+      <h3>Lead Origin Split — ${p.name} · ${periodLabel()}</h3>
       <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:center;">
         <div style="flex:1; min-width:200px;">
           <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-bottom:6px;">
@@ -1017,7 +1084,7 @@ function renderSystem() {
 /* ================= Master render ================= */
 function render() {
   $('#date').textContent = new Date().toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  $('#period-label').textContent = state.period;
+  $('#period-label').textContent = periodLabel();
   $('#sim-badge').textContent = GSD_SIMULATED ? 'SIMULATED DATA — WIRE ZOHO VIA FLUXFLOW' : 'LIVE DATA';
 
   switch (state.view) {
