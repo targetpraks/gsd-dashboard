@@ -672,7 +672,7 @@ function renderBrandBoard() {
   // Brand-critical metrics — each brand tells ONE story. No overlap with the KPI strip.
   // No founder metrics (removed per instruction). No department metrics (those live in Departments).
   const BRAND_CRITICAL = {
-    infinity: ['hr.playbook_coverage', 'impact.jobs_sustained', 'fin.recurring_ratio'],
+    infinity: ['hr.playbook_coverage', 'fin.recurring_ratio', 'funnel.output_zar.inf_consultancy', 'funnel.output_zar.sla_finance', 'funnel.output_zar.sla_hr', 'funnel.output_zar.sla_zeestore'],
     tlf: ['ops.output_units', 'ops.quality_score', 'ops.delivery_on_time', 'impact.people_helped'],
     infx: ['sal.nrr', 'ops.delivery_on_time', 'ops.csat', 'fin.recurring_ratio'],
     fluxflow: ['fin.runway', 'sal.pipeline', 'it.automation_coverage', 'it.ai_adoption', 'sal.churn'],
@@ -682,25 +682,42 @@ function renderBrandBoard() {
   };
   const brandCritical = (BRAND_CRITICAL[b.id] || []).filter(mid => !UNIVERSAL_KPIS.includes(mid));
   const criticalReadings = brandCritical.map(mid => {
-    const m = metricById(mid);
-    // funnel.* metrics are keyed by product_id, not brand_id — map brand → product
+    // Support "metric.product" entries (e.g. funnel.output_zar.inf_consultancy) for per-product funnel metrics
+    let metricId = mid;
+    let productId = null;
+    let labelOverride = null;
+    if (mid.includes('.')) {
+      const parts = mid.split('.');
+      // Try longest product match: metric prefix + product id (e.g. funnel.output_zar.inf_consultancy)
+      for (let k = parts.length - 1; k >= 2; k--) {
+        const prodId = parts.slice(k).join('.');
+        const prod = GSD_PRODUCTS.find(p => p.id === prodId);
+        if (prod) {
+          metricId = parts.slice(0, k).join('.');
+          productId = prod.id;
+          labelOverride = prod.name;
+          break;
+        }
+      }
+    }
+    const m = metricById(metricId);
+    if (!m) return null;
     let r = null;
-    if (m.id.startsWith('funnel.')) {
-      const prod = GSD_PRODUCTS.find(p => p.brand === b.id);
-      r = prod ? latestReading(m.id, null, prod.id) : null;
+    if (m.id.startsWith('funnel.') || productId) {
+      r = productId ? latestReading(m.id, null, productId) : null;
     } else {
       r = latestReading(m.id, b.id);
     }
-    return { m, r };
-  }).filter(x => x.r);
+    return { m, r, label: labelOverride };
+  }).filter(x => x && x.r);
 
-  const criticalHtml = criticalReadings.length ? criticalReadings.map(({ m, r }) => {
+  const criticalHtml = criticalReadings.length ? criticalReadings.map(({ m, r, label }) => {
     const pct = pctOf(r.value, r.target);
     const width = pct !== null ? Math.min(100, Math.max(0, pct)) : 0;
     return `
       <div class="metric">
         <div class="top">
-          <span class="label">${m.name}</span>
+          <span class="label">${label || m.name}</span>
           <span>
             <span class="value" style="font-size:15px;">${fmt(r.value, m.unit)}</span>
             ${deltaHtml(r.vs_prior, m.direction)}
