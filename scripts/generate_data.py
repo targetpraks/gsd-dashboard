@@ -268,6 +268,25 @@ for _id, _spec in {
 }.items():
     metrics[_id] = _infx(_id, *_spec)
 
+# ---- Shared App metrics (FluxFlow + Divorced Dads — both applications) ----
+def _app(id, name, definition, formula, unit, direction, target=0, note=""):
+    return {
+        "id": id, "name": name, "department": "sal", "layer": 3,
+        "definition": definition, "formula": formula, "type": "lagging",
+        "unit": unit, "direction": direction,
+        "target": {"mode": "per_brand", "values": {b["id"]: target for b in C["taxonomy"]["brands"]}},
+        "thresholds": {"green": None, "amber": None, "red": None},
+        "cadence": "monthly", "source": "app_telemetry", "owner": "TBC",
+        "framework_pillar": None, "impact_metric": False, "active": True, "note": note,
+    }
+for _id, _spec in {
+    "app.clients_onboarded": ("New Clients Onboarded", "New clients brought onto the application.", "count(new client signups)", "clients", "higher_is_better", "Acquisition."),
+    "app.total_clients": ("Total Clients", "Total active clients on the application.", "count(active clients)", "clients", "higher_is_better", "Installed base."),
+    "app.client_growth": ("Client Growth", "Net growth in clients this period.", "new_clients - churned_clients", "clients", "higher_is_better", "Growth rate."),
+    "app.data_handled": ("Data Handled", "Volume of data the application is processing.", "sum(data processed)", "records", "higher_is_better", "Platform load."),
+}.items():
+    metrics[_id] = _app(_id, *_spec)
+
 # ---- The Local Farmer production metrics (Ricardo's spec) ----
 def _tlf(id, name, definition, formula, unit, direction, target=0, note=""):
     return {
@@ -490,6 +509,7 @@ NEW_METRIC_IDS = [
     "tlf.total_yield_mushroom", "tlf.total_yield_microgreen",
     "infx.projects_completed", "infx.projects_active", "infx.time_spent_active",
     "infx.estimated_cost_active", "infx.deal_value_active", "infx.avg_labor_rate",
+    "app.clients_onboarded", "app.total_clients", "app.client_growth", "app.data_handled",
 ]
 for mid in NEW_METRIC_IDS:
     m = metrics[mid]
@@ -707,6 +727,10 @@ FORMULA_EXPLANATIONS = {
     "infx.estimated_cost_active": "Estimated cost of active work.",
     "infx.deal_value_active": "Sold value of active work.",
     "infx.avg_labor_rate": "Revenue per billed hour.",
+    "app.clients_onboarded": "New clients signed up.",
+    "app.total_clients": "Active clients on the app.",
+    "app.client_growth": "Net client growth.",
+    "app.data_handled": "Data the app is processing.",
 }
 
 # ---- Emit data.js ----
