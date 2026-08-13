@@ -400,7 +400,7 @@
   </div>
 </div>
 
-<script src="js/data.js?v=20260813-1"></script>
+<script src="js/data.js?v=20260813-2"></script>
 <script>
 'use strict';
 
@@ -424,7 +424,10 @@ const fmt = (v, unit) => {
   if (unit === 'tasks_per_quarter') return Math.round(v) + '/q';
   if (unit === 'pieces_per_month') return Math.round(v) + '/mo';
   if (unit === 'hours_per_person_month') return v.toFixed(1) + ' h';
-  if (unit === 'leads' || unit === 'opportunities' || unit === 'deals' || unit === 'tickets' || unit === 'units_or_kg') return Math.round(v).toLocaleString('en-ZA');
+  if (unit === 'leads' || unit === 'opportunities' || unit === 'deals' || unit === 'tickets' || unit === 'units_or_kg' || unit === 'subscriptions' || unit === 'posts' || unit === 'campaigns' || unit === 'calls' || unit === 'interviews' || unit === 'projects' || unit === 'messages' || unit === 'visits' || unit === 'checklists' || unit === 'letters' || unit === 'people') return Math.round(v).toLocaleString('en-ZA');
+  if (unit === 'kg') return Math.round(v).toLocaleString('en-ZA') + ' kg';
+  if (unit === 'ZAR_per_gram') return 'R' + v.toFixed(2) + '/g';
+  if (unit === 'minutes') return v.toFixed(0) + ' min';
   return v.toLocaleString('en-ZA');
 };
 const pctOf = (v, t) => (t && typeof t === 'number' && v !== null) ? Math.round((v / t) * 100) : null;
@@ -673,7 +676,7 @@ function renderBrandBoard() {
   // No founder metrics (removed per instruction). No department metrics (those live in Departments).
   const BRAND_CRITICAL = {
     infinity: ['hr.playbook_coverage', 'fin.recurring_ratio', 'funnel.output_zar.inf_consultancy', 'funnel.output_zar.sla_finance', 'funnel.output_zar.sla_hr', 'funnel.output_zar.sla_zeestore'],
-    tlf: ['ops.output_units', 'ops.quality_score', 'ops.delivery_on_time', 'impact.people_helped'],
+    tlf: ['ops.quality_score', 'ops.delivery_on_time', 'impact.people_helped', 'tlf.avg_rand_invoice', 'tlf.avg_rand_per_gram_mushroom', 'tlf.avg_rand_per_gram_microgreen', 'tlf.yield_pct_mushroom', 'tlf.yield_pct_microgreen', 'tlf.facility_utilization_mushroom', 'tlf.facility_utilization_microgreen', 'tlf.subscriptions_loaded', 'tlf.subscription_retention', 'tlf.total_yield_mushroom', 'tlf.total_yield_microgreen'],
     infx: ['sal.nrr', 'ops.delivery_on_time', 'ops.csat', 'fin.recurring_ratio'],
     fluxflow: ['fin.runway', 'sal.pipeline', 'it.automation_coverage', 'it.ai_adoption', 'sal.churn'],
     divorced: ['fin.runway', 'mkt.community_size', 'impact.purpose_score', 'impact.people_helped'],

@@ -8,7 +8,7 @@ of deterministic simulated readings per brand (non-funnel) and per product
 """
 import json, random, os, datetime
 
-SRC = "/Users/rmmacbook/.hermes/profiles/work/cache/documents/doc_590ea9bd74db_cerebro-v2.json"
+SRC = "/Users/rmmacbook/Developer/gsd-dashboard/cerebro-v2.json"
 OUT = "/Users/rmmacbook/Developer/gsd-dashboard/js/data.js"
 
 with open(SRC) as f:
@@ -114,6 +114,12 @@ def gen_value(metric, brand_id, month_idx):
             val = random.uniform(80, 400)
         elif unit == "nps":
             val = random.uniform(-20, 70)
+        elif unit == "kg":
+            val = random.uniform(20, 400)
+        elif unit == "subscriptions":
+            val = random.uniform(5, 200)
+        elif unit == "ZAR_per_gram":
+            val = random.uniform(0.5, 5)
         else:
             val = random.uniform(1, 100)
 
@@ -241,6 +247,32 @@ metrics["mkt.nps"] = {
     "active": True,
     "note": "Main reporting feature — customer advocacy."
 }
+# ---- The Local Farmer production metrics (Ricardo's spec) ----
+def _tlf(id, name, definition, formula, unit, direction, target=0, note=""):
+    return {
+        "id": id, "name": name, "department": "ops", "layer": 3,
+        "definition": definition, "formula": formula, "type": "lagging",
+        "unit": unit, "direction": direction,
+        "target": {"mode": "per_brand", "values": {b["id"]: target for b in C["taxonomy"]["brands"]}},
+        "thresholds": {"green": None, "amber": None, "red": None},
+        "cadence": "monthly", "source": "tlf_app", "owner": "TBC",
+        "framework_pillar": None, "impact_metric": False, "active": True, "note": note,
+    }
+for _id, _spec in {
+    "tlf.avg_rand_invoice": ("Average Rand per Invoice", "Average invoice value from TLF sales.", "revenue / invoices", "ZAR", "higher_is_better", "TLF sales economics."),
+    "tlf.avg_rand_per_gram_mushroom": ("Avg Rand per Gram — Mushroom", "Average price per gram of mushrooms sold.", "mushroom_revenue / mushroom_grams", "ZAR_per_gram", "higher_is_better", "Mushroom unit economics."),
+    "tlf.avg_rand_per_gram_microgreen": ("Avg Rand per Gram — Microgreens", "Average price per gram of microgreens sold.", "microgreen_revenue / microgreen_grams", "ZAR_per_gram", "higher_is_better", "Microgreen unit economics."),
+    "tlf.yield_pct_mushroom": ("Yield % — Mushroom", "Actual yield vs expected yield for mushrooms.", "actual_yield / expected_yield", "percent", "higher_is_better", "Mushroom growing efficiency."),
+    "tlf.yield_pct_microgreen": ("Yield % — Microgreens", "Actual yield vs expected yield for microgreens.", "actual_yield / expected_yield", "percent", "higher_is_better", "Microgreen growing efficiency."),
+    "tlf.facility_utilization_mushroom": ("Facility Production % — Mushroom", "Racks/trays in use vs total available for mushrooms.", "trays_used / trays_available", "percent", "higher_is_better", "Mushroom facility utilization."),
+    "tlf.facility_utilization_microgreen": ("Facility Production % — Microgreens", "Racks/trays in use vs total available for microgreens.", "trays_used / trays_available", "percent", "higher_is_better", "Microgreen facility utilization."),
+    "tlf.subscriptions_loaded": ("Subscriptions Loaded", "Active subscription customers loaded.", "count(active_subscriptions)", "subscriptions", "higher_is_better", "TLF subscription base."),
+    "tlf.subscription_retention": ("Subscription Retention", "Share of subscription customers retained.", "retained / total_subscribers", "percent", "higher_is_better", "Subscription stickiness."),
+    "tlf.total_yield_mushroom": ("Total Yield — Mushroom", "Total kilograms of mushrooms grown.", "sum(mushroom_kg)", "kg", "higher_is_better", "Mushroom production volume."),
+    "tlf.total_yield_microgreen": ("Total Yield — Microgreens", "Total kilograms of microgreens grown.", "sum(microgreen_kg)", "kg", "higher_is_better", "Microgreen production volume."),
+}.items():
+    metrics[_id] = _tlf(_id, *_spec)
+
 # ---- New operational metrics (Ricardo's spec) ----
 def _m(id, name, dept, definition, formula, unit, direction, target=0, note=""):
     return {
@@ -430,6 +462,11 @@ NEW_METRIC_IDS = [
     "sal.calls_logged", "sal.avg_call_time",
     "ops.site_visits", "ops.avg_site_visits_per_location", "ops.brc_completed", "ops.brc_score",
     "ops.ticket_resolution_rate", "ops.ticket_response_time", "ops.success_tracker", "ops.letters_of_concern",
+    "tlf.avg_rand_invoice", "tlf.avg_rand_per_gram_mushroom", "tlf.avg_rand_per_gram_microgreen",
+    "tlf.yield_pct_mushroom", "tlf.yield_pct_microgreen",
+    "tlf.facility_utilization_mushroom", "tlf.facility_utilization_microgreen",
+    "tlf.subscriptions_loaded", "tlf.subscription_retention",
+    "tlf.total_yield_mushroom", "tlf.total_yield_microgreen",
 ]
 for mid in NEW_METRIC_IDS:
     m = metrics[mid]
@@ -453,7 +490,7 @@ for mid in NEW_METRIC_IDS:
                 val = random.uniform(-10, 70)
             else:
                 val = random.uniform(1, 200)
-            if unit in ("percent", "score_10", "visits_per_location", "nps"):
+            if unit in ("percent", "score_10", "visits_per_location", "nps", "ZAR_per_gram"):
                 val = round(val, 1)
             else:
                 val = int(round(val))
@@ -630,6 +667,17 @@ FORMULA_EXPLANATIONS = {
     "ops.letters_of_concern": "Letters sent to franchisees.",
     "nps.internal_dept": "Would the team recommend working here?",
     "nps.external_dept": "Would customers recommend working with us?",
+    "tlf.avg_rand_invoice": "Average invoice value.",
+    "tlf.avg_rand_per_gram_mushroom": "Price per gram of mushrooms.",
+    "tlf.avg_rand_per_gram_microgreen": "Price per gram of microgreens.",
+    "tlf.yield_pct_mushroom": "Mushrooms grown vs expected.",
+    "tlf.yield_pct_microgreen": "Microgreens grown vs expected.",
+    "tlf.facility_utilization_mushroom": "Racks in use vs available.",
+    "tlf.facility_utilization_microgreen": "Trays in use vs available.",
+    "tlf.subscriptions_loaded": "Active subscriptions.",
+    "tlf.subscription_retention": "Subscriptions kept.",
+    "tlf.total_yield_mushroom": "Kg of mushrooms grown.",
+    "tlf.total_yield_microgreen": "Kg of microgreens grown.",
 }
 
 # ---- Emit data.js ----
