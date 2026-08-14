@@ -348,6 +348,7 @@
     <button class="nav-btn" data-view="brands">🏢 Brand Boards</button>
     <button class="nav-btn" data-view="depts">🏛 Departments</button>
     <button class="nav-btn" data-view="funnel">🔻 Funnel</button>
+    <button class="nav-btn" data-view="acq">🤝 Acquisitions</button>
     <button class="nav-btn" data-view="library">📚 Metric Library</button>
     <button class="nav-btn" data-view="alerts">🚨 Alerts <span class="count-badge" id="alert-count">0</span></button>
     <button class="nav-btn" data-view="system">⚙️ System</button>
@@ -390,6 +391,13 @@
     <div class="section-title"><span class="bar"></span> Departments <small>— drill into one department across all brands</small></div>
     <div class="brand-tabs" id="dept-tabs"></div>
     <div id="dept-view"></div>
+  </div>
+
+  <!-- ============ ACQUISITIONS ============ -->
+  <div class="view" id="view-acq">
+    <div class="section-title"><span class="bar"></span> Acquisitions <small>— buy don't build · Codie Sanchez framework · per brand</small></div>
+    <div class="brand-tabs" id="acq-brand-tabs"></div>
+    <div id="acq-view"></div>
   </div>
 
   <!-- ============ METRIC LIBRARY ============ -->
@@ -451,7 +459,7 @@ const fmt = (v, unit) => {
   if (unit === 'tasks_per_quarter') return Math.round(v) + '/q';
   if (unit === 'pieces_per_month') return Math.round(v) + '/mo';
   if (unit === 'hours_per_person_month') return v.toFixed(1) + ' h';
-  if (unit === 'leads' || unit === 'opportunities' || unit === 'deals' || unit === 'tickets' || unit === 'units_or_kg' || unit === 'subscriptions' || unit === 'posts' || unit === 'campaigns' || unit === 'calls' || unit === 'interviews' || unit === 'projects' || unit === 'messages' || unit === 'visits' || unit === 'checklists' || unit === 'letters' || unit === 'people') return Math.round(v).toLocaleString('en-ZA');
+  if (unit === 'leads' || unit === 'opportunities' || unit === 'deals' || unit === 'tickets' || unit === 'units_or_kg' || unit === 'subscriptions' || unit === 'posts' || unit === 'campaigns' || unit === 'calls' || unit === 'interviews' || unit === 'projects' || unit === 'messages' || unit === 'visits' || unit === 'checklists' || unit === 'letters' || unit === 'people' || unit === 'functions') return Math.round(v).toLocaleString('en-ZA');
   if (unit === 'kg') return Math.round(v).toLocaleString('en-ZA') + ' kg';
   if (unit === 'ZAR_per_gram') return 'R' + v.toFixed(2) + '/g';
   if (unit === 'minutes') return v.toFixed(0) + ' min';
@@ -475,6 +483,7 @@ let state = {
   ceoBrand: 'infinity',
   funnelProduct: 'infx_solutions',
   dept: 'fin',
+  acqBrand: 'infinity',
   period: GSD_CURRENT,
   periodMode: 'month', // 'month' | 'quarter'
 };
@@ -627,6 +636,7 @@ function renderCeo() {
   const html = Object.entries(blocks).map(([blockName, metricIds]) => {
     const rows = metricIds.map(mid => {
       const m = metricById(mid);
+      if (!m) return ''; // metric removed from scope — skip safely
       const r = latestReading(mid, b.id);
       const val = r ? r.value : null;
       const tgt = r ? r.target : null;
@@ -703,17 +713,17 @@ function renderBrandBoard() {
   // No founder metrics (removed per instruction). No department metrics (those live in Departments).
   const BRAND_CRITICAL = {
     infinity: ['hr.playbook_coverage', 'fin.recurring_ratio', 'funnel.output_zar.inf_consultancy', 'funnel.output_zar.sla_finance', 'funnel.output_zar.sla_hr', 'funnel.output_zar.sla_zeestore'],
-    tlf: ['ops.quality_score', 'ops.delivery_on_time', 'impact.people_helped', 'tlf.avg_rand_invoice', 'tlf.avg_rand_per_gram_mushroom', 'tlf.avg_rand_per_gram_microgreen', 'tlf.yield_pct_mushroom', 'tlf.yield_pct_microgreen', 'tlf.facility_utilization_mushroom', 'tlf.facility_utilization_microgreen', 'tlf.subscriptions_loaded', 'tlf.subscription_retention', 'tlf.total_yield_mushroom', 'tlf.total_yield_microgreen'],
-    infx: ['sal.nrr', 'ops.delivery_on_time', 'ops.csat', 'fin.recurring_ratio', 'infx.projects_completed', 'infx.projects_active', 'infx.time_spent_active', 'infx.estimated_cost_active', 'infx.deal_value_active', 'infx.avg_labor_rate'],
+    tlf: ['ops.quality_score', 'ops.delivery_on_time', 'tlf.avg_rand_invoice', 'tlf.avg_rand_per_gram_mushroom', 'tlf.avg_rand_per_gram_microgreen', 'tlf.yield_pct_mushroom', 'tlf.yield_pct_microgreen', 'tlf.facility_utilization_mushroom', 'tlf.facility_utilization_microgreen', 'tlf.subscriptions_loaded', 'tlf.subscription_retention', 'tlf.rand_per_subscription', 'tlf.total_yield_mushroom', 'tlf.total_yield_microgreen'],
+    infx: ['sal.nrr', 'ops.delivery_on_time', 'ops.csat', 'fin.recurring_ratio', 'fin.revenue', 'infx.projects_completed', 'infx.projects_active', 'infx.time_spent_active', 'infx.estimated_cost_active', 'infx.deal_value_active', 'infx.avg_labor_rate'],
     fluxflow: ['fin.runway', 'sal.pipeline', 'it.automation_coverage', 'it.ai_adoption', 'sal.churn', 'sal.nrr', 'it.system_uptime', 'app.clients_onboarded', 'app.total_clients', 'app.client_growth', 'app.data_handled'],
-    divorced: ['fin.runway', 'mkt.community_size', 'impact.purpose_score', 'impact.people_helped', 'sal.nrr', 'it.system_uptime', 'app.clients_onboarded', 'app.total_clients', 'app.client_growth', 'app.data_handled'],
+    divorced: ['fin.runway', 'mkt.community_size', 'sal.nrr', 'it.system_uptime', 'app.clients_onboarded', 'app.total_clients', 'app.client_growth', 'app.data_handled'],
     papapasta: { sections: [
       { title: 'Franchisor — Franchisee-Facing', metrics: ['franch.locations', 'franch.consultants_per_location', 'franch.nps', 'franch.sop_compliance'] },
-      { title: 'Brand — Client-Facing', metrics: ['franch.group_turnover', 'franch.products_sold_qty', 'franch.products_sold_turnover', 'franch.brand_nps', 'franch.brand_csat'] },
+      { title: 'Brand — Client-Facing', metrics: ['franch.group_turnover', 'franch.products_sold_qty', 'franch.products_sold_turnover', 'franch.brand_nps', 'franch.brand_csat', 'fin.gross_margin'] },
     ]},
     acdc: { sections: [
       { title: 'Franchisor — Franchisee-Facing', metrics: ['franch.locations', 'franch.consultants_per_location', 'franch.nps', 'franch.sop_compliance'] },
-      { title: 'Brand — Client-Facing', metrics: ['franch.group_turnover', 'franch.products_sold_qty', 'franch.products_sold_turnover', 'franch.brand_nps', 'franch.brand_csat'] },
+      { title: 'Brand — Client-Facing', metrics: ['franch.group_turnover', 'franch.products_sold_qty', 'franch.products_sold_turnover', 'franch.brand_nps', 'franch.brand_csat', 'fin.gross_margin'] },
     ]},
   };
   // Resolve readings for a metric id (flat form), supporting product-qualified ids
@@ -896,6 +906,81 @@ function renderFunnel() {
     </div>`;
 }
 
+/* ================= Acquisitions ================= */
+function renderAcqTabs() {
+  const html = Object.values(GSD_BRANDS).map(b => `
+    <button class="brand-tab ${state.acqBrand === b.id ? 'active' : ''}" data-acq-brand="${b.id}">
+      ${b.name}
+    </button>`).join('');
+  $('#acq-brand-tabs').innerHTML = html;
+  $$('#acq-brand-tabs .brand-tab').forEach(t => t.addEventListener('click', () => {
+    state.acqBrand = t.dataset.acqBrand;
+    renderAcqTabs();
+    renderAcq();
+  }));
+}
+
+function renderAcq() {
+  const b = brandById(state.acqBrand);
+  const ACQ_METRICS = ['acq.deals_sourced', 'acq.deals_in_diligence', 'acq.deals_closed', 'acq.seller_financing_pct', 'fin.cash_on_cash'];
+  const rows = ACQ_METRICS.map(mid => {
+    const m = metricById(mid);
+    if (!m) return '';
+    const r = latestReading(mid, b.id);
+    const val = r ? r.value : null;
+    const tgt = r ? r.target : null;
+    const st = r ? r.status : 'no_data';
+    const pct = pctOf(val, tgt);
+    const width = pct !== null ? Math.min(100, Math.max(0, pct)) : 0;
+    const explain = (typeof GSD_FORMULA_EXPLANATIONS !== 'undefined' && GSD_FORMULA_EXPLANATIONS[m.id]) || '';
+    return `
+      <div class="metric">
+        <div class="top">
+          <span class="label">${m.name}</span>
+          <span>
+            <span class="value">${fmt(val, m.unit)}</span>
+            ${deltaHtml(r ? r.vs_prior : null, m.direction)}
+            ${pill(st)}
+          </span>
+        </div>
+        <div class="bar"><div class="bar-fill" style="width:${width}%; background:${barColor(st)};"></div></div>
+        <div class="sub" style="font-size:10px; color:var(--muted);">${m.id} · ${m.cadence}</div>
+        <div class="sub" style="font-size:11px; color:var(--text); font-weight:600; margin-top:2px;">${explain}</div>
+      </div>`;
+  }).join('');
+
+  // 6-month trend table for the acquisition metrics
+  const trendMetrics = ['acq.deals_sourced', 'acq.deals_in_diligence', 'acq.deals_closed', 'acq.seller_financing_pct', 'fin.cash_on_cash'];
+  const trendRows = GSD_MONTHS.map(period => {
+    const cells = trendMetrics.map(mid => {
+      const m = metricById(mid);
+      const r = GSD_READINGS.find(x => x.metric_id === mid && x.brand_id === b.id && x.period === period);
+      return `<td class="mono">${r ? fmt(r.value, m.unit) : '—'}</td>`;
+    }).join('');
+    return `<tr><td class="mono" style="color:var(--muted);">${period}</td>${cells}</tr>`;
+  }).join('');
+  const trendHeaders = trendMetrics.map(mid => `<th>${metricById(mid).name}</th>`).join('');
+
+  $('#acq-view').innerHTML = `
+    <div class="card" style="margin-bottom:14px; border-color:var(--border-strong);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <h3 style="margin:0; color:var(--text);">${b.name} — Acquisition Pipeline</h3>
+        <span class="pill ${b.status === 'active' ? 'green' : 'amber'}">${b.status.toUpperCase()}</span>
+      </div>
+      <div style="margin-top:6px; font-size:12px; color:var(--muted);">Buy don't build. Source deals, run diligence, close with leverage. Codie Sanchez framework.</div>
+    </div>
+    <div class="grid g-3">${rows}</div>
+    <div class="card" style="margin-top:14px;">
+      <h3>6-Month Trend — ${b.name}</h3>
+      <div style="overflow-x:auto;">
+        <table class="table">
+          <thead><tr><th>Period</th>${trendHeaders}</tr></thead>
+          <tbody>${trendRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
 /* ================= Departments ================= */
 function renderDeptTabs() {
   const html = Object.values(GSD_DEPTS).map(d => `
@@ -914,7 +999,7 @@ function renderDept() {
   const d = deptById(state.dept);
   // Curated scorecard per BU — the identity. Full metric set lives in the Metric Library.
   const SCORECARD = {
-    fin: ['fin.net_burn', 'fin.runway', 'fin.dso', 'fin.opex_ratio', 'fin.revenue_vs_plan'],
+    fin: ['fin.opex_ratio', 'fin.revenue_vs_plan'],
     hr: ['hr.rev_per_fte', 'hr.attrition', 'hr.team_satisfaction', 'hr.playbook_coverage', 'hr.interviews_done', 'hr.people_recruited', 'hr.training_hours_completed', 'hr.curriculum_completion_pct'],
     adm: ['adm.projects_overdue', 'adm.projects_overdue_rate', 'adm.projects_completed', 'adm.inbox_unread', 'adm.inbox_response_time', 'adm.zeestore_turnover'],
     it: ['it.system_uptime', 'it.mttr_p1', 'it.open_tickets', 'it.automation_coverage'],
@@ -1150,6 +1235,7 @@ function render() {
     case 'ceo': renderCeoTabs(); renderCeo(); break;
     case 'brands': renderBrandTabs(); renderBrandBoard(); break;
     case 'funnel': renderFunnelTabs(); renderFunnel(); break;
+    case 'acq': renderAcqTabs(); renderAcq(); break;
     case 'depts': renderDeptTabs(); renderDept(); break;
     case 'library': renderLibrary(); break;
     case 'alerts': renderAlerts(); break;

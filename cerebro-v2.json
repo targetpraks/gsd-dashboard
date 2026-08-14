@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://infinitybrands.co.za/schemas/cerebro.json",
-  "title": "CEREBRO — Infinity Group Measurement System",
+  "title": "CEREBRO \u2014 Infinity Group Measurement System",
   "version": "2.0.0",
   "description": "Single canonical measurement contract for the Infinity Group. Merges the Cerebro layered spec (v1.0), the Hermes business-measurement-system schema (v1.0.0), and the existing Sales & Marketing Funnel Tracker model. This file supersedes both predecessors. Any AI, agent or system reading, writing or reporting on portfolio metrics reads this and nothing else.",
   "supersedes": [
@@ -41,7 +41,7 @@
     "pillars": [
       {
         "id": "martell",
-        "name": "Dan Martell — Buy Back Your Time",
+        "name": "Dan Martell \u2014 Buy Back Your Time",
         "principle": "Time is the only non-renewable resource. Move hours into high-value work and systemise the rest.",
         "levers": [
           "eliminate",
@@ -57,7 +57,7 @@
       },
       {
         "id": "squibb",
-        "name": "Simon Squibb — Help First / Give Without Take",
+        "name": "Simon Squibb \u2014 Help First / Give Without Take",
         "principle": "Help people first, money follows. Commercial success is a byproduct of value genuinely delivered.",
         "pillars": [
           "purpose",
@@ -147,7 +147,7 @@
       {
         "id": "papapasta",
         "name": "Papa Pasta",
-        "role": "FND — Food Franchise",
+        "role": "FND \u2014 Food Franchise",
         "status": "proposed",
         "priority": 1,
         "focus_metrics": [
@@ -161,7 +161,7 @@
       {
         "id": "acdc",
         "name": "ACDC Express",
-        "role": "FND — Franchisor",
+        "role": "FND \u2014 Franchisor",
         "status": "proposed",
         "priority": 2,
         "focus_metrics": [
@@ -184,21 +184,21 @@
         },
         {
           "id": "sla_finance",
-          "name": "SLA — Finance",
+          "name": "SLA \u2014 Finance",
           "line": "professional_services",
           "brand": "infinity",
           "output_unit": "ZAR"
         },
         {
           "id": "sla_hr",
-          "name": "SLA — HR",
+          "name": "SLA \u2014 HR",
           "line": "professional_services",
           "brand": "infinity",
           "output_unit": "ZAR"
         },
         {
           "id": "sla_zeestore",
-          "name": "SLA — ZeeStore",
+          "name": "SLA \u2014 ZeeStore",
           "line": "professional_services",
           "brand": "infinity",
           "output_unit": "ZAR"
@@ -306,7 +306,7 @@
   },
   "funnel_model": {
     "description": "The Sales & Marketing Funnel Tracker model, wired into the measurement system as the sales engine. Previously absent from both predecessor schemas.",
-    "equation": "Leads × Conversion % = Output",
+    "equation": "Leads \u00d7 Conversion % = Output",
     "grain": "per product, per month",
     "horizon_months": 24,
     "source_workbook": "Sales & Marketing Funnel Tracker (Zoho Sheet, 15 tabs)",
@@ -393,7 +393,7 @@
       "name": "Gross Margin",
       "department": "fin",
       "layer": 2,
-      "definition": "(Revenue − COGS) / Revenue.",
+      "definition": "(Revenue \u2212 COGS) / Revenue.",
       "formula": "(revenue - cogs) / revenue",
       "type": "lagging",
       "unit": "percent",
@@ -1662,7 +1662,7 @@
       "department": "impact",
       "layer": 1,
       "block": "Foundation",
-      "definition": "Cumulative people positively impacted — customers, franchisees, employees, community.",
+      "definition": "Cumulative people positively impacted \u2014 customers, franchisees, employees, community.",
       "formula": "sum(people_impacted)",
       "type": "lagging",
       "unit": "people",
@@ -1765,7 +1765,7 @@
     },
     {
       "id": "funnel.conv_lead_to_opp",
-      "name": "Conversion — Lead to Opportunity",
+      "name": "Conversion \u2014 Lead to Opportunity",
       "department": "sal",
       "layer": 2,
       "grain": "product",
@@ -1849,7 +1849,7 @@
     },
     {
       "id": "funnel.conv_opp_to_close",
-      "name": "Conversion — Opportunity to Close",
+      "name": "Conversion \u2014 Opportunity to Close",
       "department": "sal",
       "layer": 2,
       "grain": "product",
@@ -1877,7 +1877,7 @@
     },
     {
       "id": "funnel.output_zar",
-      "name": "Funnel Output — Value",
+      "name": "Funnel Output \u2014 Value",
       "department": "sal",
       "layer": 1,
       "block": "Growth",
@@ -1908,7 +1908,7 @@
     },
     {
       "id": "funnel.output_locations",
-      "name": "Funnel Output — Locations Sold",
+      "name": "Funnel Output \u2014 Locations Sold",
       "department": "sal",
       "layer": 1,
       "block": "Growth",
@@ -1936,20 +1936,194 @@
       "applies_to_lines": [
         "fnd"
       ]
+    },
+    {
+      "id": "ops.key_person_dependency",
+      "name": "Key-Person Dependency",
+      "department": "ops",
+      "layer": 1,
+      "block": "Survival",
+      "definition": "Count of critical functions where the answer to 'if the person running this quit tomorrow, who does the job fall on?' is the owner. The Bottleneck Question \u2014 Codie Sanchez framework.",
+      "formula": "count(critical_functions where owner is the fallback)",
+      "type": "leading",
+      "unit": "functions",
+      "direction": "lower_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 0
+      },
+      "thresholds": {
+        "green": 0,
+        "amber": 2,
+        "red": 999
+      },
+      "cadence": "monthly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": "martell",
+      "impact_metric": false,
+      "active": true,
+      "note": "Codie Sanchez \u2014 Own or Be Owned. The Bottleneck Question: what system needs to exist so it doesn't matter who leaves?"
+    },
+    {
+      "id": "fin.cash_on_cash",
+      "name": "Cash-on-Cash Return",
+      "department": "fin",
+      "layer": 1,
+      "block": "Growth",
+      "definition": "Annual cash profit divided by cash invested. The return the owner's actual money earns \u2014 Codie Sanchez's primary deal evaluation metric.",
+      "formula": "annual_cash_profit / cash_invested",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "per_brand",
+        "values": {
+          "infinity": 30,
+          "tlf": 30,
+          "infx": 30,
+          "fluxflow": 30,
+          "divorced": 30,
+          "papapasta": 30,
+          "acdc": 30
+        }
+      },
+      "thresholds": {
+        "green": 30,
+        "amber": 20,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "zoho_books",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "note": "Codie Sanchez \u2014 boring business benchmark: 30-50%+ cash-on-cash in stabilized years."
+    },
+    {
+      "id": "acq.deals_sourced",
+      "name": "Deals Sourced",
+      "department": "fin",
+      "layer": 2,
+      "definition": "Acquisition opportunities sourced in the period \u2014 from brokers, direct outreach, media, or network.",
+      "formula": "count(deals sourced)",
+      "type": "leading",
+      "unit": "deals",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 4
+      },
+      "thresholds": {
+        "green": 4,
+        "amber": 2,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "note": "Acquisition pipeline \u2014 buy don't build."
+    },
+    {
+      "id": "acq.deals_in_diligence",
+      "name": "Deals in Diligence",
+      "department": "fin",
+      "layer": 2,
+      "definition": "Deals currently in due diligence \u2014 actively being evaluated for purchase.",
+      "formula": "count(deals in diligence)",
+      "type": "leading",
+      "unit": "deals",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 1
+      },
+      "thresholds": {
+        "green": 1,
+        "amber": 0,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "note": "Acquisition pipeline \u2014 active evaluation."
+    },
+    {
+      "id": "acq.deals_closed",
+      "name": "Deals Closed",
+      "department": "fin",
+      "layer": 2,
+      "definition": "Acquisitions completed in the period.",
+      "formula": "count(deals closed)",
+      "type": "lagging",
+      "unit": "deals",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 1
+      },
+      "thresholds": {
+        "green": 1,
+        "amber": 0,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "note": "Acquisition pipeline \u2014 closed deals."
+    },
+    {
+      "id": "acq.seller_financing_pct",
+      "name": "Seller Financing %",
+      "department": "fin",
+      "layer": 3,
+      "definition": "Share of acquisition purchase price financed by the seller \u2014 reduces cash outlay and aligns seller incentives.",
+      "formula": "seller_financed_amount / purchase_price",
+      "type": "lagging",
+      "unit": "percent",
+      "direction": "higher_is_better",
+      "target": {
+        "mode": "fixed",
+        "value": 50
+      },
+      "thresholds": {
+        "green": 50,
+        "amber": 30,
+        "red": 0
+      },
+      "cadence": "monthly",
+      "source": "manual_capture",
+      "owner": "TBC",
+      "framework_pillar": null,
+      "impact_metric": false,
+      "active": true,
+      "note": "Codie Sanchez \u2014 seller financing is the leverage that makes deals work with less cash down."
     }
   ],
   "ceo_twelve": {
-    "description": "Layer 1. Ricardo's only screen. Twenty minutes, Monday morning. References into the metric library — no separate definitions.",
+    "description": "Layer 1. Ricardo's only screen. Twenty minutes, Monday morning. References into the metric library \u2014 no separate definitions.",
     "blocks": {
       "Survival": [
         "fin.runway",
         "fin.net_burn",
-        "fin.gross_margin"
+        "fin.gross_margin",
+        "ops.key_person_dependency"
       ],
       "Growth": [
         "fin.revenue_vs_plan",
         "sal.pipeline_coverage",
-        "funnel.output_zar"
+        "funnel.output_zar",
+        "fin.cash_on_cash"
       ],
       "Founder Freedom": [
         "founder.buyback_rate",
@@ -1959,18 +2133,18 @@
       "Foundation": [
         "hr.playbook_coverage",
         "hr.rev_per_fte",
-        "impact.people_helped"
+        "fin.recurring_ratio"
       ]
     },
     "note": "funnel.output_locations surfaces alongside funnel.output_zar for FND brands; it does not consume a separate slot."
   },
   "data_sources": {
-    "zoho_books": "Finance — revenue, margin, burn, runway, spend",
-    "zoho_crm": "Sales — pipeline, deals, CAC, LTV, NRR, churn",
-    "zoho_people": "HR — headcount, training, attrition",
-    "zoho_desk": "IT — tickets, MTTR",
-    "zoho_inventory": "Ops — delivery, output",
-    "funnel_tracker": "Funnel — leads, conversions, opportunities, output. Zoho Sheet workbook, 15 tabs, manual until CRM integration lands.",
+    "zoho_books": "Finance \u2014 revenue, margin, burn, runway, spend",
+    "zoho_crm": "Sales \u2014 pipeline, deals, CAC, LTV, NRR, churn",
+    "zoho_people": "HR \u2014 headcount, training, attrition",
+    "zoho_desk": "IT \u2014 tickets, MTTR",
+    "zoho_inventory": "Ops \u2014 delivery, output",
+    "funnel_tracker": "Funnel \u2014 leads, conversions, opportunities, output. Zoho Sheet workbook, 15 tabs, manual until CRM integration lands.",
     "tlf_app": "TLF production data",
     "social_analytics": "Reach, community",
     "survey": "Satisfaction and CSAT scores",
@@ -1978,7 +2152,7 @@
     "infra_monitoring": "Uptime",
     "directory": "Identity and MFA",
     "coda": "Playbooks, escalations, audits, ladder scoring",
-    "calc": "Derived metrics — no primary source"
+    "calc": "Derived metrics \u2014 no primary source"
   },
   "alerting": {
     "cadence": "weekly",
@@ -1986,7 +2160,7 @@
       "discord",
       "telegram"
     ],
-    "principle": "Alert on red flips only. Never send green confirmations — they train people to ignore the channel.",
+    "principle": "Alert on red flips only. Never send green confirmations \u2014 they train people to ignore the channel.",
     "rules": [
       {
         "metric": "fin.runway",
@@ -2037,7 +2211,7 @@
         "metric": "funnel.conv_lead_to_opp",
         "condition": "< target * 0.75",
         "severity": "warning",
-        "note": "Isolates the SDR stage — tells you the bottleneck is qualification, not lead volume"
+        "note": "Isolates the SDR stage \u2014 tells you the bottleneck is qualification, not lead volume"
       },
       {
         "metric": "funnel.conv_opp_to_close",
@@ -2049,6 +2223,24 @@
         "metric": "hr.new_hire_90d",
         "condition": "< 70",
         "severity": "warning"
+      },
+      {
+        "metric": "ops.key_person_dependency",
+        "condition": "> 2",
+        "severity": "warning",
+        "note": "Bottleneck Question \u2014 more than 2 critical functions fall back to the owner"
+      },
+      {
+        "metric": "fin.cash_on_cash",
+        "condition": "< 20",
+        "severity": "warning",
+        "note": "Below the boring-business benchmark band (30-50%+)"
+      },
+      {
+        "metric": "acq.deals_sourced",
+        "condition": "< 2",
+        "severity": "warning",
+        "note": "Deal flow drying up \u2014 buy don't build"
       }
     ]
   },
@@ -2141,7 +2333,7 @@
       "id": "G1",
       "severity": "high",
       "title": "Funnel is three stages; both schemas modelled one",
-      "detail": "Hermes had a single lead_conversion (Leads → Customers, target 8%). Cerebro v1 had win_rate only. The Funnel Tracker splits conversion across Marketing → SDR → Dealmaker. Collapsing to one number makes it impossible to tell which team is the bottleneck, which is the entire purpose of the tracker.",
+      "detail": "Hermes had a single lead_conversion (Leads \u2192 Customers, target 8%). Cerebro v1 had win_rate only. The Funnel Tracker splits conversion across Marketing \u2192 SDR \u2192 Dealmaker. Collapsing to one number makes it impossible to tell which team is the bottleneck, which is the entire purpose of the tracker.",
       "resolution": "Added funnel.conv_lead_to_opp (SDR) and funnel.conv_opp_to_close (Dealmaker) as separate metrics with team attribution. Single-stage lead_conversion removed."
     },
     {
@@ -2156,7 +2348,7 @@
       "severity": "high",
       "title": "Brand list does not cover the product list",
       "detail": "The Funnel Tracker runs nine products. Hermes and Cerebro both listed five brands. Papa Pasta, ACDC Express, INF Consultancy and the three SLA products had no home. Divorced Dads has no funnel product.",
-      "resolution": "Added a products taxonomy with explicit product → brand mapping. Papa Pasta and ACDC Express added as proposed brands. Divorced Dads flagged as unmapped, needing a funnel tab or a recorded exemption."
+      "resolution": "Added a products taxonomy with explicit product \u2192 brand mapping. Papa Pasta and ACDC Express added as proposed brands. Divorced Dads flagged as unmapped, needing a funnel tab or a recorded exemption."
     },
     {
       "id": "G4",
@@ -2176,7 +2368,7 @@
       "id": "G6",
       "severity": "medium",
       "title": "Buyback Rate was defined as something else",
-      "detail": "Hermes defined buyback_rate as HVA time over total work time with a 50% target. That is Martell's Production-quadrant measure. The Buyback Rate is a currency-per-hour delegation threshold: (income ÷ hours) ÷ 4.",
+      "detail": "Hermes defined buyback_rate as HVA time over total work time with a 50% target. That is Martell's Production-quadrant measure. The Buyback Rate is a currency-per-hour delegation threshold: (income \u00f7 hours) \u00f7 4.",
       "resolution": "Split into founder.buyback_rate (ZAR/hour) and founder.production_pct (percent, target 50). Both retained, correctly named."
     },
     {
@@ -2190,7 +2382,7 @@
       "id": "G8",
       "severity": "low",
       "title": "Tech debt target contradicted its own scale",
-      "detail": "Defined as 1-10 where 10 = clean, then targeted '< 5' — i.e. targeting a broken codebase.",
+      "detail": "Defined as 1-10 where 10 = clean, then targeted '< 5' \u2014 i.e. targeting a broken codebase.",
       "resolution": "Renamed to Codebase Health Score, direction set higher_is_better, target 7."
     },
     {
@@ -2198,7 +2390,7 @@
       "severity": "high",
       "title": "No metric had an owner",
       "detail": "Hermes had no owner field at all. Cerebro had the field but every value was TBC.",
-      "resolution": "Field retained and required. Still TBC — this is the Phase 1 blocker and cannot be solved by a schema."
+      "resolution": "Field retained and required. Still TBC \u2014 this is the Phase 1 blocker and cannot be solved by a schema."
     }
   ],
   "implementation_phases": [
@@ -2270,6 +2462,11 @@
       "id": 6,
       "question": "Reinstate cycle time tracking, or keep it descoped as originally decided?",
       "blocks_phase": 5
+    },
+    {
+      "id": 7,
+      "question": "CEO Twelve now carries 14 Layer 1 metrics (added ops.key_person_dependency + fin.cash_on_cash). Contract caps Layer 1 at 12. Ratify the 14, or demote two to Layer 2?",
+      "blocks_phase": 2
     }
   ],
   "enums": {
@@ -2364,7 +2561,7 @@
     }
   },
   "counts": {
-    "metrics_total": 59,
+    "metrics_total": 56,
     "by_department": {
       "fin": 10,
       "founder": 6,
@@ -2375,8 +2572,8 @@
       "ops": 6,
       "sal": 12
     },
-    "funnel_metrics_nested_in": "mkt and sal — funnel.* metrics carry funnel_stage and team fields",
+    "funnel_metrics_nested_in": "mkt and sal \u2014 funnel.* metrics carry funnel_stage and team fields",
     "layer_1_slots": 12,
-    "reduction_from_cerebro_v1": "101 → 59, achieved by defining metrics once in a library and referencing them per brand rather than duplicating"
+    "reduction_from_cerebro_v1": "101 \u2192 59, achieved by defining metrics once in a library and referencing them per brand rather than duplicating"
   }
 }

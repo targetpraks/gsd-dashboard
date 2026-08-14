@@ -64,10 +64,14 @@ def gen_value(metric, brand_id, month_idx):
     # base value around target with drift over months
     if tval is not None:
         base = float(tval)
-        # drift: earlier months slightly worse, improving toward current
-        drift = (month_idx - (len(MONTHS) - 1)) * 0.06
-        noise = random.uniform(-0.12, 0.12)
-        val = base * (1 + drift + noise)
+        # key-person dependency: target 0 is the ideal; generate realistic 0-4 for demo
+        if unit == "functions" and base == 0:
+            val = random.uniform(0, 4)
+        else:
+            # drift: earlier months slightly worse, improving toward current
+            drift = (month_idx - (len(MONTHS) - 1)) * 0.06
+            noise = random.uniform(-0.12, 0.12)
+            val = base * (1 + drift + noise)
     else:
         # no target: generate a plausible absolute number by unit
         if unit == "percent":
@@ -90,6 +94,8 @@ def gen_value(metric, brand_id, month_idx):
             val = random.uniform(4, 40)
         elif unit == "deals":
             val = random.uniform(1, 12)
+        elif unit == "functions":
+            val = random.uniform(0, 5)
         elif unit == "franchise_locations":
             val = random.uniform(0, 6)
         elif unit == "tickets":
@@ -147,8 +153,9 @@ def target_for(metric, brand_id):
         return target.get("value")
     return None
 
-# ---- Build metric map ----
-metrics = {m["id"]: m for m in C["metrics"]}
+# ---- Build metric map ---- (impact metrics removed from scope per Ricardo)
+IMPACT_IDS = {"impact.people_helped", "impact.purpose_score", "impact.jobs_sustained"}
+metrics = {m["id"]: m for m in C["metrics"] if m["id"] not in IMPACT_IDS}
 # EBITDA metrics (departmental costing) — not in the contract yet
 metrics["fin.ebitda"] = {
     "id": "fin.ebitda",
@@ -339,6 +346,7 @@ for _id, _spec in {
     "tlf.facility_utilization_microgreen": ("Facility Production % — Microgreens", "Racks/trays in use vs total available for microgreens.", "trays_used / trays_available", "percent", "higher_is_better", "Microgreen facility utilization."),
     "tlf.subscriptions_loaded": ("Subscriptions Loaded", "Active subscription customers loaded.", "count(active_subscriptions)", "subscriptions", "higher_is_better", "TLF subscription base."),
     "tlf.subscription_retention": ("Subscription Retention", "Share of subscription customers retained.", "retained / total_subscribers", "percent", "higher_is_better", "Subscription stickiness."),
+    "tlf.rand_per_subscription": ("Rand per Subscription", "Revenue earned per active subscription.", "subscription_revenue / count(active_subscriptions)", "ZAR", "higher_is_better", "Subscription value per subscriber."),
     "tlf.total_yield_mushroom": ("Total Yield — Mushroom", "Total kilograms of mushrooms grown.", "sum(mushroom_kg)", "kg", "higher_is_better", "Mushroom production volume."),
     "tlf.total_yield_microgreen": ("Total Yield — Microgreens", "Total kilograms of microgreens grown.", "sum(microgreen_kg)", "kg", "higher_is_better", "Microgreen production volume."),
 }.items():
@@ -414,7 +422,7 @@ products = C["taxonomy"]["products"]["items"]
 BU_STRUCTURE = [
     {"id": "fin", "code": "BU 1", "name": "FIN", "full": "BU 1 FIN", "north_star": "fin.runway"},
     {"id": "hr", "code": "BU 2", "name": "HRM", "full": "BU 2 HRM", "north_star": "hr.rev_per_fte"},
-    {"id": "adm", "code": "BU 3", "name": "ADM", "full": "BU 3 ADM", "north_star": "impact.purpose_score"},
+    {"id": "adm", "code": "BU 3", "name": "ADM", "full": "BU 3 ADM", "north_star": "adm.projects_completed"},
     {"id": "it", "code": "BU 4", "name": "ITC", "full": "BU 4 ITC", "north_star": "it.system_uptime"},
     {"id": "mkt", "code": "BU 5", "name": "MKT", "full": "BU 5 MKT", "north_star": "mkt.cost_per_lead"},
     {"id": "sal", "code": "BU 6", "name": "SAL", "full": "BU 6 SAL", "north_star": "sal.pipeline_coverage"},
@@ -439,6 +447,8 @@ readings = []  # {metric_id, brand_id|product_id, period, value, target, status,
 
 for m in C["metrics"]:
     mid = m["id"]
+    if mid in IMPACT_IDS:
+        continue  # removed from scope per Ricardo — no people-helped / purpose / jobs metrics
     is_funnel = mid.startswith("funnel.")
     if is_funnel:
         # per product, split by origin (INBOUND / OUTBOUND) per the Funnel Tracker
@@ -536,7 +546,7 @@ NEW_METRIC_IDS = [
     "tlf.avg_rand_invoice", "tlf.avg_rand_per_gram_mushroom", "tlf.avg_rand_per_gram_microgreen",
     "tlf.yield_pct_mushroom", "tlf.yield_pct_microgreen",
     "tlf.facility_utilization_mushroom", "tlf.facility_utilization_microgreen",
-    "tlf.subscriptions_loaded", "tlf.subscription_retention",
+    "tlf.subscriptions_loaded", "tlf.subscription_retention", "tlf.rand_per_subscription",
     "tlf.total_yield_mushroom", "tlf.total_yield_microgreen",
     "infx.projects_completed", "infx.projects_active", "infx.time_spent_active",
     "infx.estimated_cost_active", "infx.deal_value_active", "infx.avg_labor_rate",
@@ -752,6 +762,7 @@ FORMULA_EXPLANATIONS = {
     "tlf.facility_utilization_microgreen": "Trays in use vs available.",
     "tlf.subscriptions_loaded": "Active subscriptions.",
     "tlf.subscription_retention": "Subscriptions kept.",
+    "tlf.rand_per_subscription": "Revenue per active subscription.",
     "tlf.total_yield_mushroom": "Kg of mushrooms grown.",
     "tlf.total_yield_microgreen": "Kg of microgreens grown.",
     "infx.projects_completed": "Projects handed over.",
@@ -773,6 +784,12 @@ FORMULA_EXPLANATIONS = {
     "franch.products_sold_turnover": "Revenue from product sold.",
     "franch.brand_nps": "Customers rating the brand.",
     "franch.brand_csat": "Customer happiness with the brand.",
+    "ops.key_person_dependency": "Critical functions that fall back to the owner.",
+    "fin.cash_on_cash": "Cash profit vs cash invested.",
+    "acq.deals_sourced": "Acquisition opportunities found.",
+    "acq.deals_in_diligence": "Deals being evaluated.",
+    "acq.deals_closed": "Acquisitions completed.",
+    "acq.seller_financing_pct": "Share of deal financed by the seller.",
 }
 
 # ---- Emit data.js ----
