@@ -1,15 +1,15 @@
 // GSD Dashboard — generated data (DO NOT EDIT).
-// Source: cerebro-v2.json measurement contract.
+// Source: INF GSD Limited Edition measurement contract.
 // Dummy/simulated data for development. To be wired to Zoho via FluxFlow.
-const CEREBRO = {
+const INF_GSD = {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://infinitybrands.co.za/schemas/cerebro.json",
-  "title": "CEREBRO \u2014 Infinity Group Measurement System",
+  "$id": "https://infinitybrands.co.za/schemas/inf-gsd-limited-edition.json",
+  "title": "INF GSD Limited Edition \u2014 Infinity Group Measurement System",
   "version": "2.0.0",
-  "description": "Single canonical measurement contract for the Infinity Group. Merges the Cerebro layered spec (v1.0), the Hermes business-measurement-system schema (v1.0.0), and the existing Sales & Marketing Funnel Tracker model. This file supersedes both predecessors. Any AI, agent or system reading, writing or reporting on portfolio metrics reads this and nothing else.",
+  "description": "Single canonical measurement contract for the Infinity Group. Merges the GSD layered spec (v1.0), the Hermes business-measurement-system schema (v1.0.0), and the existing Sales & Marketing Funnel Tracker model. This file supersedes both predecessors. Any AI, agent or system reading, writing or reporting on portfolio metrics reads this and nothing else.",
   "supersedes": [
     {
-      "source": "cerebro.json",
+      "source": "inf-gsd-limited-edition.json",
       "version": "1.0.0",
       "kept": "layer architecture, named owners, structured RAG thresholds, leading/lagging typing, operating cadence, 1-3-1 escalation, band targets, DDA governance note"
     },
@@ -357,7 +357,7 @@ const CEREBRO = {
       },
       "cycle_time_tracking": {
         "included": false,
-        "reason": "Explicitly descoped at funnel tracker design stage. NOTE: cerebro v1.0 re-introduced sal.cycle_length in breach of this decision; removed in v2.0 pending an explicit reversal."
+        "reason": "Explicitly descoped at funnel tracker design stage. NOTE: the v1 spec re-introduced sal.cycle_length in breach of this decision; removed in v2.0 pending an explicit reversal."
       },
       "zoho_crm_integration": {
         "included": false,
@@ -2336,7 +2336,7 @@ const CEREBRO = {
       "id": "G1",
       "severity": "high",
       "title": "Funnel is three stages; both schemas modelled one",
-      "detail": "Hermes had a single lead_conversion (Leads \u2192 Customers, target 8%). Cerebro v1 had win_rate only. The Funnel Tracker splits conversion across Marketing \u2192 SDR \u2192 Dealmaker. Collapsing to one number makes it impossible to tell which team is the bottleneck, which is the entire purpose of the tracker.",
+      "detail": "Hermes had a single lead_conversion (Leads \u2192 Customers, target 8%). the v1 spec had win_rate only. The Funnel Tracker splits conversion across Marketing \u2192 SDR \u2192 Dealmaker. Collapsing to one number makes it impossible to tell which team is the bottleneck, which is the entire purpose of the tracker.",
       "resolution": "Added funnel.conv_lead_to_opp (SDR) and funnel.conv_opp_to_close (Dealmaker) as separate metrics with team attribution. Single-stage lead_conversion removed."
     },
     {
@@ -2350,7 +2350,7 @@ const CEREBRO = {
       "id": "G3",
       "severity": "high",
       "title": "Brand list does not cover the product list",
-      "detail": "The Funnel Tracker runs nine products. Hermes and Cerebro both listed five brands. Papa Pasta, ACDC Express, INF Consultancy and the three SLA products had no home. Divorced Dads has no funnel product.",
+      "detail": "The Funnel Tracker runs nine products. Hermes and the v1 spec both listed five brands. Papa Pasta, ACDC Express, INF Consultancy and the three SLA products had no home. Divorced Dads has no funnel product.",
       "resolution": "Added a products taxonomy with explicit product \u2192 brand mapping. Papa Pasta and ACDC Express added as proposed brands. Divorced Dads flagged as unmapped, needing a funnel tab or a recorded exemption."
     },
     {
@@ -2364,7 +2364,7 @@ const CEREBRO = {
       "id": "G5",
       "severity": "medium",
       "title": "Cycle time re-introduced against a prior scoping decision",
-      "detail": "sal.cycle_length appeared in cerebro v1.0 despite cycle time being explicitly descoped when the Funnel Tracker was designed.",
+      "detail": "sal.cycle_length appeared in v1.0 despite cycle time being explicitly descoped when the Funnel Tracker was designed.",
       "resolution": "Removed. Recorded in funnel_model.scope_decisions_carried_forward so it does not creep back in silently."
     },
     {
@@ -2392,7 +2392,7 @@ const CEREBRO = {
       "id": "G9",
       "severity": "high",
       "title": "No metric had an owner",
-      "detail": "Hermes had no owner field at all. Cerebro had the field but every value was TBC.",
+      "detail": "Hermes had no owner field at all. the v1 spec had the field but every value was TBC.",
       "resolution": "Field retained and required. Still TBC \u2014 this is the Phase 1 blocker and cannot be solved by a schema."
     }
   ],
@@ -2577,7 +2577,7 @@ const CEREBRO = {
     },
     "funnel_metrics_nested_in": "mkt and sal \u2014 funnel.* metrics carry funnel_stage and team fields",
     "layer_1_slots": 12,
-    "reduction_from_cerebro_v1": "101 \u2192 59, achieved by defining metrics once in a library and referencing them per brand rather than duplicating"
+    "reduction_from_v1": "101 \u2192 59, achieved by defining metrics once in a library and referencing them per brand rather than duplicating"
   }
 };
 const GSD_METRICS = {

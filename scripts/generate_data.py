@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
 GSD Dashboard — dummy data generator.
-Reads cerebro-v2.json (the canonical measurement contract) and emits
+Reads inf-gsd-limited-edition.json (the canonical measurement contract) and emits
 js/data.js with metric definitions, brand/product taxonomy, and 6 months
 of deterministic simulated readings per brand (non-funnel) and per product
 (funnel metrics). Statuses computed per the contract's RAG standard.
 """
 import json, random, os, datetime
 
-SRC = "/Users/rmmacbook/Developer/gsd-dashboard/cerebro-v2.json"
+SRC = "/Users/rmmacbook/Developer/gsd-dashboard/inf-gsd-limited-edition.json"
 OUT = "/Users/rmmacbook/Developer/gsd-dashboard/js/data.js"
 
 with open(SRC) as f:
@@ -798,9 +798,9 @@ def js_str(s):
 
 out = []
 out.append("// GSD Dashboard — generated data (DO NOT EDIT).")
-out.append("// Source: cerebro-v2.json measurement contract.")
+out.append("// Source: INF GSD Limited Edition measurement contract.")
 out.append("// Dummy/simulated data for development. To be wired to Zoho via FluxFlow.")
-out.append("const CEREBRO = " + json.dumps(C, indent=2) + ";")
+out.append("const INF_GSD = " + json.dumps(C, indent=2) + ";")
 out.append("const GSD_METRICS = " + json.dumps(metrics, indent=2) + ";")
 out.append("const GSD_BRANDS = " + json.dumps(brands, indent=2) + ";")
 out.append("const GSD_PRODUCTS = " + json.dumps(products, indent=2) + ";")

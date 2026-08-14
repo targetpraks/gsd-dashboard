@@ -334,7 +334,7 @@
       <div class="logo-mark">GSD</div>
       <div>
         <div class="logo-title">Get Shit Done <span class="le">·</span> <span class="le2">Limited Edition</span></div>
-        <div class="subtitle">Infinity Group Measurement System · CEREBRO v2.0</div>
+        <div class="subtitle">Infinity Group Measurement System · INF GSD Limited Edition</div>
       </div>
     </div>
     <div class="header-right">
@@ -421,7 +421,7 @@
   </div>
 
   <div class="footer">
-    CEREBRO v2.0 measurement contract · <code>cerebro-v2.json</code> · RAG: green ≥100% · amber 90–99% · red &lt;90%<br>
+    INF GSD Limited Edition measurement contract · <code>inf-gsd-limited-edition.json</code> · RAG: green ≥100% · amber 90–99% · red &lt;90%<br>
     Dummy data for development — wire Zoho via FluxFlow for live readings · Owner: Ricardo Da Costa Maio
   </div>
 </div>
@@ -618,7 +618,7 @@ function renderCeoTabs() {
 function renderCeo() {
   const b = brandById(state.ceoBrand);
   const blocks = Object.fromEntries(
-    Object.entries(CEREBRO.ceo_twelve.blocks).filter(([name]) => name !== 'Founder Freedom')
+    Object.entries(INF_GSD.ceo_twelve.blocks).filter(([name]) => name !== 'Founder Freedom')
   );
   // NPS is a main reporting feature — surface it in the Growth block
   if (blocks['Growth']) {
@@ -797,7 +797,7 @@ function renderFunnelTabs() {
 function renderFunnel() {
   const p = productById(state.funnelProduct);
   const line = p.line;
-  const stages = CEREBRO.funnel_model.stages;
+  const stages = INF_GSD.funnel_model.stages;
 
   const stageHtml = stages.map(s => {
     const outMetric = s.stage === 1 ? 'funnel.leads' : s.stage === 2 ? 'funnel.opportunities' : (line === 'fnd' ? 'funnel.output_locations' : 'funnel.output_zar');
@@ -1038,7 +1038,7 @@ $('#metric-search').addEventListener('input', renderLibrary);
 
 /* ================= Alerts ================= */
 function renderAlerts() {
-  const rules = CEREBRO.alerting.rules;
+  const rules = INF_GSD.alerting.rules;
   const alerts = [];
   rules.forEach(rule => {
     const m = metricById(rule.metric);
@@ -1107,14 +1107,14 @@ function evalRule(rule, r) {
 /* ================= System ================= */
 function renderSystem() {
   // Data sources
-  $('#data-sources').innerHTML = Object.entries(CEREBRO.data_sources).map(([k, v]) => `
+  $('#data-sources').innerHTML = Object.entries(INF_GSD.data_sources).map(([k, v]) => `
     <div class="src">
       <div><div class="s-name">${k}</div><div class="s-desc">${v}</div></div>
       <span class="pill green">WIRED</span>
     </div>`).join('');
 
   // Phases
-  $('#phases').innerHTML = CEREBRO.implementation_phases.map(p => `
+  $('#phases').innerHTML = INF_GSD.implementation_phases.map(p => `
     <div class="phase ${p.status}">
       <div class="p-num">${p.phase}</div>
       <div>
@@ -1124,7 +1124,7 @@ function renderSystem() {
     </div>`).join('');
 
   // Decisions
-  $('#decisions').innerHTML = CEREBRO.open_decisions.map(d => `
+  $('#decisions').innerHTML = INF_GSD.open_decisions.map(d => `
     <div class="alert-item warning">
       <div>
         <div class="a-metric">Decision ${d.id} <span class="pill warning">BLOCKS PHASE ${d.blocks_phase}</span></div>
@@ -1134,8 +1134,8 @@ function renderSystem() {
 
   // Escalation
   $('#escalation').innerHTML = `
-    <div style="font-size:13px; color:var(--muted); margin-bottom:12px;">${CEREBRO.escalation.rule_1_3_1.description}</div>
-    ${CEREBRO.escalation.ladder.map(rung => `
+    <div style="font-size:13px; color:var(--muted); margin-bottom:12px;">${INF_GSD.escalation.rule_1_3_1.description}</div>
+    ${INF_GSD.escalation.ladder.map(rung => `
       <div class="src">
         <div><div class="s-name">Week ${rung.weeks_red} red</div><div class="s-desc">${rung.action}</div></div>
       </div>`).join('')}`;
